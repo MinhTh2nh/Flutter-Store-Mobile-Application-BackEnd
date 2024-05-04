@@ -13,10 +13,10 @@ const orderRouter = require("./routes/OrderRouter");
 const app = express();
 const port = process.env.PORT;
 
-app.use(cors({
-  origin: ['http://localhost:3000'], // Allow requests from these origins
-  credentials: true, // Allow cookies and credentials
-}));
+// app.use(cors({
+//   origin: ['http://localhost:3000'], // Allow requests from these origins
+//   credentials: true, // Allow cookies and credentials
+// }));
 
 app.use(express.json());
 app.use(express.urlencoded({
@@ -32,7 +32,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // app.use("/", indexRouter);
 // app.use("/users", usersRouter);
-// app.use("/products", productRouter);
+app.use("/products", productRouter);
 // app.use("/orders", orderRouter);
 
 app.listen(port, '0.0.0.0', () => {

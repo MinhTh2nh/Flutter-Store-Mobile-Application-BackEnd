@@ -1,4 +1,4 @@
-
+const db = require("../config/db");
 require("dotenv").config();
 
 module.exports = {
@@ -30,13 +30,75 @@ module.exports = {
     });
   },
 
+  // getAllProducts: async (req, res) => {
+  //   try {
+  //     const sql = "SELECT * FROM PRODUCT";
+  //     db.query(sql, (err, result) => {
+  //       res.status(200).json({
+  //         status: "success",
+  //         message: "Successfully get all products!",
+  //         data: result,
+  //       });
+  //     });
+  //   } catch (error) {
+  //     res.status(400).json(error);
+  //   }
+  // },
+
   getAllProducts: async (req, res) => {
     try {
-      const sql = "SELECT * FROM products";
+      let sql = `
+            SELECT 
+                p.*,
+                c.*,
+                sc.sub_name
+            FROM 
+                PRODUCT p
+                INNER JOIN CATEGORY c ON p.category_id = c.category_id
+                INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+        `;
+
       db.query(sql, (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch products.",
+            error: err.message,
+          });
+        }
+
         res.status(200).json({
           status: "success",
-          message: "Successfully get all products!",
+          message: "Successfully fetched products!",
+          data: result,
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
+
+  getAllItems: async (req, res) => {
+    try {
+      let sql = `
+        SELECT I.*, SC.size_name
+        FROM ITEM I
+        INNER JOIN SIZE_CATEGORY SC ON I.size_id = SC.size_id
+        WHERE I.product_id = ${req.params.product_id}
+        `;
+
+      db.query(sql, (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch products.",
+            error: err.message,
+          });
+        }
+
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched products!",
           data: result,
         });
       });
@@ -67,7 +129,7 @@ module.exports = {
       const status = "Available";
       const productType = req.params.productType;
       const sql = "SELECT * FROM products where status = ? and productType = ?";
-      const value = [status , productType];
+      const value = [status, productType];
 
       db.query(sql, value, (err, result) => {
         res.status(200).json({
@@ -192,45 +254,45 @@ module.exports = {
   },
   checkQuantityOfProduct: async (req, res) => {
     try {
-        const productID = req.body.productID;
-        const requestedQuantity = req.body.orderQuantity;
-        const price = req.body.price;
-        const sql = 'SELECT quantity FROM products WHERE productID = ?';
-        const values = [productID];
+      const productID = req.body.productID;
+      const requestedQuantity = req.body.orderQuantity;
+      const price = req.body.price;
+      const sql = "SELECT quantity FROM products WHERE productID = ?";
+      const values = [productID];
 
-        db.query(sql, values, (err, result) => {
-            if (err) {
-                throw new Error(err.message);
-            }
+      db.query(sql, values, (err, result) => {
+        if (err) {
+          throw new Error(err.message);
+        }
 
-            if (result.length > 0) {
-                const availableQuantity = result[0].quantity;
+        if (result.length > 0) {
+          const availableQuantity = result[0].quantity;
 
-                if (availableQuantity >= requestedQuantity) {
-                    res.status(200).json({
-                        status: 'Sufficient Quantity',
-                        message: 'Product has enough quantity',
-                    });
-                } else {
-                    res.status(400).json({
-                        status: 'Not Enough Quantity',
-                        message: 'Not Enough Quantity',
-                    });
-                }
-            } else {
-                res.status(404).json({
-                    status: 'Product not found',
-                    message: `Product with ID ${productID} not found`,
-                });
-            }
-        });
+          if (availableQuantity >= requestedQuantity) {
+            res.status(200).json({
+              status: "Sufficient Quantity",
+              message: "Product has enough quantity",
+            });
+          } else {
+            res.status(400).json({
+              status: "Not Enough Quantity",
+              message: "Not Enough Quantity",
+            });
+          }
+        } else {
+          res.status(404).json({
+            status: "Product not found",
+            message: `Product with ID ${productID} not found`,
+          });
+        }
+      });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            status: 'Internal Server Error',
-            message: 'An error occurred while processing the request',
-            error: error.message,
-        });
+      console.error(error);
+      res.status(500).json({
+        status: "Internal Server Error",
+        message: "An error occurred while processing the request",
+        error: error.message,
+      });
     }
-}
-}
+  },
+};

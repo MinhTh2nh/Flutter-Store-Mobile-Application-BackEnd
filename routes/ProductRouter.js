@@ -1,22 +1,22 @@
 var express = require("express");
 var router = express.Router();
 const { validateAdmin, validateUser } = require("../validator/UsersValidator");
-const productsControllerMySQL = require("../controller/ProductsControllerMySQL");
+const productsController = require("../controller/ProductsController");
 const multer = require("multer");
 
 
 //For the MySQL database -- Start Here
 //Test Ok
-router.get("/get", productsControllerMySQL.getAllProductAvailable);
-router.get("/get/:productType", productsControllerMySQL.getAllProductAvailableByProductType);
-router.get("/getProductUnavailable", productsControllerMySQL.getProductUnavailable);
-router.get("/getAllProducts", productsControllerMySQL.getAllProducts);
-router.post("/create", productsControllerMySQL.createProduct);
-router.get("/get/:productID", productsControllerMySQL.getProductById);
-router.put("/update/:productID", productsControllerMySQL.editProductById);
-router.delete("/delete/:productID", productsControllerMySQL.deleteProductController);
+router.get("/get", productsController.getAllProductAvailable);
+router.get("/get/:productType", productsController.getAllProductAvailableByProductType);
+router.get("/getProductUnavailable", productsController.getProductUnavailable);
+router.get("/getAllProducts", productsController.getAllProducts);
+router.post("/create", productsController.createProduct);
+router.get("/get/:productID", productsController.getProductById);
+router.put("/update/:productID", productsController.editProductById);
+router.delete("/delete/:productID", productsController.deleteProductController);
 
-router.post('/checkQuantity', productsControllerMySQL.checkQuantityOfProduct);
+router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
 //Un-Test
 //For the MySQL database -- End Here
