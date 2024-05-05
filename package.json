@@ -30,6 +30,8 @@
     "path": "^0.12.7",
     "sequelize": "^6.35.1",
     "start": "^5.1.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "validator": "^13.11.0"
   }
 }

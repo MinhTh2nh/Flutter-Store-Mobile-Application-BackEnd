@@ -1,5 +1,6 @@
 
 require("dotenv").config();
+const db = require("../config/db");
 
 module.exports = {
   createProduct: (req, res) => {
@@ -32,7 +33,7 @@ module.exports = {
 
   getAllProducts: async (req, res) => {
     try {
-      const sql = "SELECT * FROM products";
+      const sql = "SELECT * FROM PRODUCT";
       db.query(sql, (err, result) => {
         res.status(200).json({
           status: "success",
