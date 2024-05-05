@@ -186,24 +186,42 @@ module.exports = {
       res.status(400).json(error);
     }
   },
-  getAllProductAvailableByProductType: async (req, res) => {
-    try {
-      const status = "Available";
-      const productType = req.params.productType;
-      const sql = "SELECT * FROM products where status = ? and productType = ?";
-      const value = [status, productType];
 
-      db.query(sql, value, (err, result) => {
-        res.status(200).json({
-          status: "success",
-          message: "Successfully get all products!",
-          data: result,
+  getByProductCategory: async (req, res) => {
+    try {
+        const category_name = req.query.category_name;
+        let sql = `
+        SELECT 
+            p.*,
+            c.*,
+            sc.sub_name
+        FROM 
+            PRODUCT p
+            INNER JOIN CATEGORY c ON p.category_id = c.category_id
+            INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+        WHERE c.category_name = ?
+    `;
+
+        db.query(sql, [category_name], (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    status: "error",
+                    message: "Failed to fetch products.",
+                    error: err.message,
+                });
+            }
+
+            res.status(200).json({
+                status: "success",
+                message: "Successfully fetched products!",
+                data: result,
+            });
         });
-      });
     } catch (error) {
-      res.status(400).json(error);
+        res.status(400).json(error);
     }
-  },
+},
+  
 
   getProductUnavailable: async (req, res) => {
     try {

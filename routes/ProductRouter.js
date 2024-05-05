@@ -8,12 +8,11 @@ const multer = require("multer");
 //For the MySQL database -- Start Here
 //Test Ok
 router.get("/get", productsController.getAllProducts);
-
-router.get("/get/:productType", productsController.getAllProductAvailableByProductType);
-router.post("/create", productsController.createProduct);
+router.get("/get/category", productsController.getByProductCategory);
 router.get("/get/:product_id", productsController.getProductById);
 router.get("/get/itemList/:product_id", productsController.getAllItems);
 
+router.post("/create", productsController.createProduct);
 router.put("/update/:product_id", productsController.editProductById);
 router.delete("/delete/:product_id", productsController.deleteProductController);
 
