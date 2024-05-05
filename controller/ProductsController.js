@@ -30,20 +30,6 @@ module.exports = {
     });
   },
 
-  // getAllProducts: async (req, res) => {
-  //   try {
-  //     const sql = "SELECT * FROM PRODUCT";
-  //     db.query(sql, (err, result) => {
-  //       res.status(200).json({
-  //         status: "success",
-  //         message: "Successfully get all products!",
-  //         data: result,
-  //       });
-  //     });
-  //   } catch (error) {
-  //     res.status(400).json(error);
-  //   }
-  // },
 
   getAllProducts: async (req, res) => {
     try {
@@ -107,10 +93,86 @@ module.exports = {
     }
   },
 
+  getProductById: async (req, res) => {
+    try {
+      const product_id = req.params.product_id;
+      const sql = "SELECT * FROM PRODUCT WHERE product_id = ?";
+      const value = [product_id];
+      db.query(sql, value, (error, results) => {
+        if (error) {
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (results.length === 0) {
+          return res.status(404).json({ error: "Product not found" });
+        }
+        const productData = results[0];
+
+        return res.json({
+          status: "success",
+          data: productData,
+        });
+      });
+    } catch {
+      res.status(400).json({ error: "Bad Request" });
+    }
+  },
+
+  editProductById: async (req, res) => {
+    try {
+      const product_id = req.params.product_id;
+      const { image, name, price, description, quantity, productType, status } =
+        req.body;
+
+      const updatedStatus = quantity === 0 ? "Unavailable" : status;
+
+      const updateSql =
+        "UPDATE products SET image=?, name=?, price=?, description=?, quantity=?, productType=?, status=? WHERE product_id=?";
+
+      const updateValues = [
+        image,
+        name,
+        price,
+        description,
+        quantity,
+        productType,
+        updatedStatus,
+        product_id,
+      ];
+
+      db.query(updateSql, updateValues, (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: updateErr.message,
+          });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Product with ID ${product_id} not found`,
+          });
+        }
+
+        res.json({
+          status: "success",
+          message: `Successfully updated product with ID ${product_id}!`,
+        });
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: error.message,
+      });
+    }
+  },
+
   getAllProductAvailable: async (req, res) => {
     try {
       const status = "Available";
-      const sql = "SELECT * FROM products where status = ?";
+      const sql = "SELECT * FROM PRODUCT where status = ?";
       const value = [status];
 
       db.query(sql, value, (err, result) => {
@@ -158,82 +220,6 @@ module.exports = {
       });
     } catch (error) {
       res.status(400).json(error);
-    }
-  },
-
-  getProductById: async (req, res) => {
-    try {
-      const productID = req.params.productID;
-      const sql = "SELECT * FROM products WHERE productID = ?";
-      const value = [productID];
-      db.query(sql, value, (error, results) => {
-        if (error) {
-          return res.status(500).json({ error: "Internal Server Error" });
-        }
-        if (results.length === 0) {
-          return res.status(404).json({ error: "Product not found" });
-        }
-        const productData = results[0];
-
-        return res.json({
-          status: "success",
-          data: productData,
-        });
-      });
-    } catch {
-      res.status(400).json({ error: "Bad Request" });
-    }
-  },
-
-  editProductById: async (req, res) => {
-    try {
-      const productID = req.params.productID;
-      const { image, name, price, description, quantity, productType, status } =
-        req.body;
-
-      const updatedStatus = quantity === 0 ? "Unavailable" : status;
-
-      const updateSql =
-        "UPDATE products SET image=?, name=?, price=?, description=?, quantity=?, productType=?, status=? WHERE productID=?";
-
-      const updateValues = [
-        image,
-        name,
-        price,
-        description,
-        quantity,
-        productType,
-        updatedStatus,
-        productID,
-      ];
-
-      db.query(updateSql, updateValues, (updateErr, updateResult) => {
-        if (updateErr) {
-          return res.status(500).json({
-            status: "error",
-            message: "Internal server error",
-            error: updateErr.message,
-          });
-        }
-
-        if (updateResult.affectedRows === 0) {
-          return res.status(404).json({
-            status: "error",
-            message: `Product with ID ${productID} not found`,
-          });
-        }
-
-        res.json({
-          status: "success",
-          message: `Successfully updated product with ID ${productID}!`,
-        });
-      });
-    } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-        error: error.message,
-      });
     }
   },
 

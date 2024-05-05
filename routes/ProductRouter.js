@@ -7,18 +7,21 @@ const multer = require("multer");
 
 //For the MySQL database -- Start Here
 //Test Ok
-router.get("/get", productsController.getAllProductAvailable);
+router.get("/get", productsController.getAllProducts);
+
 router.get("/get/:productType", productsController.getAllProductAvailableByProductType);
-router.get("/getProductUnavailable", productsController.getProductUnavailable);
-router.get("/getAllProducts", productsController.getAllProducts);
 router.post("/create", productsController.createProduct);
-router.get("/get/:productID", productsController.getProductById);
-router.put("/update/:productID", productsController.editProductById);
-router.delete("/delete/:productID", productsController.deleteProductController);
+router.get("/get/:product_id", productsController.getProductById);
+router.get("/get/itemList/:product_id", productsController.getAllItems);
+
+router.put("/update/:product_id", productsController.editProductById);
+router.delete("/delete/:product_id", productsController.deleteProductController);
 
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
 //Un-Test
 //For the MySQL database -- End Here
+// router.get("/getProductUnavailable", productsController.getProductUnavailable);
+// router.get("/getAllProducts", productsController.getAllProducts);
 
 module.exports = router;
