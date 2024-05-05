@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.2.4",
+    "@google-cloud/storage": "^7.10.2",
     "aws-sdk": "^2.1502.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
