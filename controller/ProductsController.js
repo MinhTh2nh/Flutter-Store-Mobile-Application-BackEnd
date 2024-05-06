@@ -100,10 +100,14 @@ module.exports = {
       const value = [product_id];
       db.query(sql, value, (error, results) => {
         if (error) {
-          return res.status(500).json({ error: "Internal Server Error" });
+          return res.status(500).json({
+            error: "Internal Server Error"
+          });
         }
         if (results.length === 0) {
-          return res.status(404).json({ error: "Product not found" });
+          return res.status(404).json({
+            error: "Product not found"
+          });
         }
         const productData = results[0];
 
@@ -113,15 +117,25 @@ module.exports = {
         });
       });
     } catch {
-      res.status(400).json({ error: "Bad Request" });
+      res.status(400).json({
+        error: "Bad Request"
+      });
     }
   },
 
   editProductById: async (req, res) => {
     try {
       const product_id = req.params.product_id;
-      const { image, name, price, description, quantity, productType, status } =
-        req.body;
+      const {
+        image,
+        name,
+        price,
+        description,
+        quantity,
+        productType,
+        status
+      } =
+      req.body;
 
       const updatedStatus = quantity === 0 ? "Unavailable" : status;
 
@@ -190,19 +204,25 @@ module.exports = {
   getByProductCategory: async (req, res) => {
     try {
         const category_name = req.query.category_name;
+        const sub_name = req.query.sub_name;
         let sql = `
-        SELECT 
-            p.*,
-            c.*,
-            sc.sub_name
-        FROM 
-            PRODUCT p
-            INNER JOIN CATEGORY c ON p.category_id = c.category_id
-            INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
-        WHERE c.category_name = ?
-    `;
+            SELECT 
+                p.*,
+                c.*,
+                sc.sub_name
+            FROM 
+                PRODUCT p
+                INNER JOIN CATEGORY c ON p.category_id = c.category_id
+                INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+            WHERE 
+                1=1 ${category_name ? 'AND c.category_name = ?' : ''} ${sub_name ? 'AND sc.sub_name = ?' : ''} 
+        `;
 
-        db.query(sql, [category_name], (err, result) => {
+        const params = [];
+        if (category_name) params.push(category_name);
+        if (sub_name) params.push(sub_name);
+
+        db.query(sql, params, (err, result) => {
             if (err) {
                 return res.status(500).json({
                     status: "error",
@@ -221,7 +241,42 @@ module.exports = {
         res.status(400).json(error);
     }
 },
-  
+
+
+
+  getByProductCategoryList: async (req, res) => {
+    try {
+      const sql = "SELECT * FROM CATEGORY";
+
+      db.query(sql, (err, result) => {
+        res.status(200).json({
+          status: "success",
+          message: "Successfully get all categories!",
+          data: result,
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
+
+  getBySubCateByCateId: async (req, res) => {
+    try {
+      const category_id = req.params.category_id;
+
+      const sql = "SELECT * FROM SUB_CATEGORY WHERE category_id = ?";
+
+      db.query(sql, [category_id] , (err, result) => {
+        res.status(200).json({
+          status: "success",
+          message: "Successfully get all categories!",
+          data: result,
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
 
   getProductUnavailable: async (req, res) => {
     try {
