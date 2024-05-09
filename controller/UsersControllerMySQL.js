@@ -7,8 +7,9 @@ require("dotenv").config();
 module.exports = {
   register: async (req, res) => {
     try {
-      const { username, email, phoneNumber, password } = req.body;
-      const obj = { username, email, phoneNumber, password };
+      const { name, email, password } = req.body;
+      const obj = { name, email, password };
+      console.log(obj);
 
       //validation register
       const { errors, isValid } = validateRegisterInput(obj);
@@ -18,7 +19,7 @@ module.exports = {
       }
   
       // Check if the email already exists
-      const checkEmailQuery = 'SELECT * FROM users WHERE email = ?';
+      const checkEmailQuery = 'SELECT * FROM CUSTOMER WHERE email = ?';
 
       db.query(checkEmailQuery, [email], async (err, result) => {
         if (err) {
@@ -37,8 +38,8 @@ module.exports = {
         // Hash the user's password before storing it
         const hashedPassword = await bcrypt.hash(password, 10);
         // If email doesn't exist, insert the new user
-        const insertUserQuery = 'INSERT INTO users SET ?';
-        db.query(insertUserQuery, { username, email, phoneNumber,  password: hashedPassword , role: 'Customer' , status: 'Active'}, (err, result) => {
+        const insertUserQuery = 'INSERT INTO CUSTOMER SET ?';
+        db.query(insertUserQuery, { name, email,  password: hashedPassword}, (err, result) => {
           if (err) {
             return res.status(400).json(err);
           }
@@ -63,7 +64,7 @@ module.exports = {
       const email = req.body.email;
       const password = req.body.password;
   
-      const sql = `SELECT * FROM users WHERE email = ?`;
+      const sql = `SELECT * FROM CUSTOMER WHERE email = ?`;
   
       db.query(sql, [email], async (err, result) => {
         if (err) {
@@ -83,12 +84,12 @@ module.exports = {
   
         const user = result[0];
   
-        if (user.status === 'Banned') {
-          return res.status(404).json({
-            status: "failed",
-            error: "User has been banned",
-          });
-        }
+        // if (user.status === 'Banned') {
+        //   return res.status(404).json({
+        //     status: "failed",
+        //     error: "User has been banned",
+        //   });
+        // }
 
         // Validate password
         const passwordMatch = await bcrypt.compare(password, user.password);
@@ -98,8 +99,7 @@ module.exports = {
           const payload = {
             userID: user.userID,
             email: user.email,
-            username: user.username,
-            phoneNumber: user.phoneNumber,
+            name: user.name,
           };
   
           // Sign token
@@ -163,7 +163,7 @@ module.exports = {
           const payload = {
             userID: user.userID,
             email: user.email,
-            username: user.username,
+            name: user.name,
           };
           jwt.sign(
             payload,
@@ -195,11 +195,11 @@ module.exports = {
   //get all users
   getAllUsers: async (req, res) => {
     try {
-      const sql = "SELECT * FROM users";
+      const sql = "SELECT * FROM CUSTOMER";
       db.query(sql, (err, result) => {
         res.status(200).json({
           status: "success",
-          message: "Successfully get all users!",
+          message: "Successfully get all customers!",
           data: result,
         });
       });
@@ -211,13 +211,13 @@ module.exports = {
   //Get user by ID
   getUserID: async (req, res) => {
     try {
-      const userID = req.params.userID;
-      const sql = "SELECT * FROM users WHERE userID = ?";
+      const customer_id = req.params.customer_id;
+      const sql = "SELECT * FROM CUSTOMER WHERE customer_id = ?";
       const value = [userID];
       db.query(sql, value, (err, result) => {
         res.json({
           status: "success",
-          message: `Successfully get data id of ${userID} !`,
+          message: `Successfully get data id of ${customer_id} !`,
           data: result,
         });
       });
@@ -250,7 +250,7 @@ module.exports = {
     updateID: async (req, res) => {
       try {
         const userID = req.params.userID;
-        const { username, email, phoneNumber } = req.body;
+        const { name, email, phoneNumber } = req.body;
     
         // Check if the new email already exists in the database
         const emailCheckSql = "SELECT COUNT(*) as count FROM users WHERE email = ?";
@@ -297,8 +297,8 @@ module.exports = {
             }
     
             // If both email and phoneNumber are unique, proceed with the update
-            const updateSql = "UPDATE users SET username=?, email=?, phoneNumber=? WHERE userID=?";
-            const updateValues = [username, email, phoneNumber, userID];
+            const updateSql = "UPDATE users SET name=?, email=?, phoneNumber=? WHERE userID=?";
+            const updateValues = [name, email, phoneNumber, userID];
     
             db.query(updateSql, updateValues, (updateErr, updateResult) => {
               if (updateErr) {
