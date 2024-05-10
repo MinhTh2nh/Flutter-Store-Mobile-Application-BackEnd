@@ -5,41 +5,25 @@ module.exports = function validateRegisterInput(data) {
   let errors = {
     status: "",
     message: {
-      username: "",
+      name: "",
       email: "",
-      phoneNumber: "",
       password: "",
     },
   };
   //  avoid error pop-up
-  data.username = !isEmpty(data.username) ? data.username : "";
   data.email = !isEmpty(data.email) ? data.email : "";
-  data.phoneNumber = !isEmpty(data.phoneNumber) ? data.phoneNumber : "";
+  data.name = !isEmpty(data.name) ? data.name : "";
   data.password = !isEmpty(data.password) ? data.password : "";
 
-  // Username validator
-  if (Validator.isEmpty(data.username)) {
+  // name validator
+  if (Validator.isEmpty(data.name)) {
     errors.status = 401;
     errors.message = {
       ...errors.message,
-      username: "Username is required.",
+      name: "Name is required.",
     };
-    // the result without "!" is true. we're trying to get the reverse result
-    // isAlphanumeric = we dont want "@", "#", etc. Only want text & number.
-  } else if (!Validator.isAlphanumeric(data.username)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      username: "Username is invalid.",
-    };
-  } else if (!Validator.isLowercase(data.username)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      username: "Username must be lowercase only.",
-    };
-  }
-
+  } 
+  
   // Email validator
   if (Validator.isEmpty(data.email)) {
     errors.status = 401;
@@ -55,20 +39,6 @@ module.exports = function validateRegisterInput(data) {
     };
   }
 
-  // PhoneNumber validator
-  if (Validator.isEmpty(data.phoneNumber)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      phoneNumber: "PhoneNumber is required.",
-    };
-  } else if (!Validator.isMobilePhone(data.phoneNumber)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      phoneNumber: "PhoneNumber is invalid.",
-    };
-  }
 
   // Password validator
   if (Validator.isEmpty(data.password)) {
