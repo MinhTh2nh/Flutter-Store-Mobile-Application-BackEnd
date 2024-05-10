@@ -5,30 +5,13 @@ module.exports = function validateRegisterInput(data) {
   let errors = {
     status: "",
     message: {
-      // name: "",
       email: "",
       password: "",
     },
   };
-  //  avoid error pop-up
-  // data.name = !isEmpty(data.name) ? data.name : "";
+
   data.email = !isEmpty(data.email) ? data.email : "";
   data.password = !isEmpty(data.password) ? data.password : "";
-
-  // // name validator
-  // if (Validator.isEmpty(data.name)) {
-  //   errors.status = 401;
-  //   errors.message = {
-  //     ...errors.message,
-  //     name: "name is required.",
-  //   };
-  // } else if (!Validator.isAlphanumeric(data.name)) {
-  //   errors.status = 401;
-  //   errors.message = {
-  //     ...errors.message,
-  //     name: "name is invalid.",
-  //   };
-  // }
 
   // Email validator
   if (Validator.isEmpty(data.email)) {

@@ -7,20 +7,19 @@ require("dotenv").config();
 module.exports = {
   register: async (req, res) => {
     try {
-      const { name, email, password } = req.body;
-      const obj = { name, email, password };
-      console.log(obj);
-
-      //validation register
+      const { email, password } = req.body;
+      const obj = { email, password };
+  
+      // validation register
       const { errors, isValid } = validateRegisterInput(obj);
-
+  
       if (!isValid) {
         return res.status(errors.status).json(errors);
       }
   
       // Check if the email already exists
       const checkEmailQuery = 'SELECT * FROM CUSTOMER WHERE email = ?';
-
+  
       db.query(checkEmailQuery, [email], async (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -39,7 +38,7 @@ module.exports = {
         const hashedPassword = await bcrypt.hash(password, 10);
         // If email doesn't exist, insert the new user
         const insertUserQuery = 'INSERT INTO CUSTOMER SET ?';
-        db.query(insertUserQuery, { name, email,  password: hashedPassword}, (err, result) => {
+        db.query(insertUserQuery, { email, password: hashedPassword }, (err, result) => {
           if (err) {
             return res.status(400).json(err);
           }
@@ -57,7 +56,7 @@ module.exports = {
         error: "Internal Server Error",
       });
     }
-  },
+  },  
 
   login: async (req, res) => {
     try {
@@ -83,13 +82,7 @@ module.exports = {
         }
   
         const user = result[0];
-  
-        // if (user.status === 'Banned') {
-        //   return res.status(404).json({
-        //     status: "failed",
-        //     error: "User has been banned",
-        //   });
-        // }
+
 
         // Validate password
         const passwordMatch = await bcrypt.compare(password, user.password);
