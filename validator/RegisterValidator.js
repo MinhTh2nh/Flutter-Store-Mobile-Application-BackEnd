@@ -5,40 +5,30 @@ module.exports = function validateRegisterInput(data) {
   let errors = {
     status: "",
     message: {
-      username: "",
+      // name: "",
       email: "",
-      phoneNumber: "",
       password: "",
     },
   };
   //  avoid error pop-up
-  data.username = !isEmpty(data.username) ? data.username : "";
+  // data.name = !isEmpty(data.name) ? data.name : "";
   data.email = !isEmpty(data.email) ? data.email : "";
-  data.phoneNumber = !isEmpty(data.phoneNumber) ? data.phoneNumber : "";
   data.password = !isEmpty(data.password) ? data.password : "";
 
-  // Username validator
-  if (Validator.isEmpty(data.username)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      username: "Username is required.",
-    };
-    // the result without "!" is true. we're trying to get the reverse result
-    // isAlphanumeric = we dont want "@", "#", etc. Only want text & number.
-  } else if (!Validator.isAlphanumeric(data.username)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      username: "Username is invalid.",
-    };
-  } else if (!Validator.isLowercase(data.username)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      username: "Username must be lowercase only.",
-    };
-  }
+  // // name validator
+  // if (Validator.isEmpty(data.name)) {
+  //   errors.status = 401;
+  //   errors.message = {
+  //     ...errors.message,
+  //     name: "name is required.",
+  //   };
+  // } else if (!Validator.isAlphanumeric(data.name)) {
+  //   errors.status = 401;
+  //   errors.message = {
+  //     ...errors.message,
+  //     name: "name is invalid.",
+  //   };
+  // }
 
   // Email validator
   if (Validator.isEmpty(data.email)) {
@@ -52,21 +42,6 @@ module.exports = function validateRegisterInput(data) {
     errors.message = {
       ...errors.message,
       email: "Email is invalid.",
-    };
-  }
-
-  // PhoneNumber validator
-  if (Validator.isEmpty(data.phoneNumber)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      phoneNumber: "PhoneNumber is required.",
-    };
-  } else if (!Validator.isMobilePhone(data.phoneNumber)) {
-    errors.status = 401;
-    errors.message = {
-      ...errors.message,
-      phoneNumber: "PhoneNumber is invalid.",
     };
   }
 
