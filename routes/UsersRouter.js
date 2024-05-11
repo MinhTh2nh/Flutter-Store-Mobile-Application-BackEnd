@@ -12,8 +12,8 @@ router.get("/get/:customer_id", userControllerMySQL.getUserID);
 router.delete("/delete/:customer_id", userControllerMySQL.deleteById);
 router.put("/update/:customer_id", userControllerMySQL.updateID);
 
-router.post("address/create", userControllerMySQL.addCustomerDetail);
-router.get("address/get/:customer_id", userControllerMySQL.getCustomerDetail);
+router.post("/address/create", userControllerMySQL.addCustomerDetail);  
+router.get("/address/get/:customer_id", userControllerMySQL.getCustomerDetail);
 
 
 module.exports = router;
