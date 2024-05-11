@@ -14,6 +14,8 @@ router.get("/get/category/sub_category/:category_id", productsController.getBySu
 router.get("/get/category/query", productsController.getByProductCategory);
 
 router.get("/get/:product_id", productsController.getProductById);
+router.get("/get/size/get", productsController.getSizeList);
+
 router.get("/get/itemList/:product_id", productsController.getAllItems);
 
 router.put("/update/:product_id", productsController.editProductById);
