@@ -2,7 +2,6 @@ var express = require("express");
 var router = express.Router();
 const { validateAdmin, validateUser } = require("../validator/UsersValidator");
 const productsController = require("../controller/ProductsController");
-const multer = require("multer");
 
 
 //For the MySQL database -- Start Here
