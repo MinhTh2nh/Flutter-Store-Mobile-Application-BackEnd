@@ -3,123 +3,77 @@ require("dotenv").config();
 
 module.exports = {
   createOrder: (req, res) => {
-    const orderData = {
-      userID: req.body.userID,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      country: req.body.country,
-      city: req.body.city,
-      address: req.body.address,
-      phoneNumber: req.body.phoneNumber,
-      postalCode: req.body.postalCode,
-      pMethod: req.body.pMethod,
-      shippingCost: req.body.shippingCost,
+    try {
+      const {
+        customer_id,
+        order_quantity,
+        order_address,
+        shipping_address,
+        phoneNumber,
+        order_status,
+        total_price,
+        items,
+      } = req.body;
+      //insert order into ORDERS table
+      const insertOrderSql = `INSERT INTO ORDERS (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      db.query(
+        insertOrderSql,
+        [
+          order_quantity,
+          order_address,
+          shipping_address,
+          phoneNumber,
+          order_status,
+          total_price,
+          customer_id,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error("Error inserting order:", err);
+            return res
+              .status(500)
+              .json({ status: "falied", error: "Internal Server Error" });
+          }
 
-      totalPrice: req.body.totalPrice,
-      status: "Draft",
-    };
+          const orderID = result.insertId;
 
-    const products = req.body.products;
+          //insert order details into ORDER_DETAILS table
+          const insertOrderDetailsSql = `INSERT INTO ORDER_DETAIL (detail_price, item_id,order_id, quantity) VALUES ?`;
+          const orderDetailValues = items.map((item) => [
+            item.detail_price,
+            item.item_id,
+            orderID,
+            item.quantity,
+          ]);
 
-    db.beginTransaction((err) => {
-      if (err) {
-        return res.status(500).json({
-          status: "error",
-          message: "Transaction Begin Error",
-          error: err.message,
-        });
-      }
+          db.query(
+            insertOrderDetailsSql,
+            [orderDetailValues],
+            (err, result) => {
+              if (err) {
+                console.error("Error inserting order details:", err);
+                return res
+                  .status(500)
+                  .json({ status: "falied", error: "Internal Server Error" });
+              }
 
-      db.query("INSERT INTO orders SET ?", orderData, (error, result) => {
-        if (error) {
-          return db.rollback(() => {
-            res.status(400).json(error);
-          });
-        }
-
-        const orderID = result.insertId;
-
-        const order_detailData = products.map((product) => [
-          orderID,
-          product.productID,
-          product.orderQuantity,
-        ]);
-
-        db.query(
-          "INSERT INTO order_detail (orderID, productID, orderQuantity) VALUES ?",
-          [order_detailData],
-          (err, result) => {
-            if (err) {
-              return db.rollback(() => {
-                res.status(400).json(err);
+              res.status(200).json({
+                status: "success",
+                message: "Successfully created order!",
+                order_id: orderID,
               });
             }
-
-            // Update product quantities and status
-            const updateProductQuantities = products.map((product) => ({
-              orderQuantity: product.orderQuantity,
-              productID: product.productID,
-            }));
-
-            // Use Promise.all to wait for all update queries to finish
-            Promise.all(
-              updateProductQuantities.map((updateData) => {
-                return new Promise((resolve) => {
-                  db.query(
-                    "UPDATE products SET quantity = quantity - ? WHERE productID = ?",
-                    [updateData.orderQuantity, updateData.productID],
-                    (err) => {
-                      if (err) {
-                        db.rollback(() => {
-                          res.status(400).json(err);
-                          resolve();
-                        });
-                      } else {
-                        if (updateData.orderQuantity === 0) {
-                          db.query(
-                            "UPDATE products SET status = 'Unavailable' WHERE productID = ?",
-                            [updateData.productID],
-                            (err) => {
-                              if (err) {
-                                db.rollback(() => {
-                                  res.status(400).json(err);
-                                });
-                              }
-                              resolve();
-                            }
-                          );
-                        } else {
-                          resolve();
-                        }
-                      }
-                    }
-                  );
-                });
-              })
-            ).then(() => {
-              db.commit((err) => {
-                if (err) {
-                  return db.rollback(() => {
-                    res.status(500).json(err);
-                  });
-                }
-
-                res.json({
-                  status: "success",
-                  message: "Successfully create order!",
-                  data: result,
-                });
-              });
-            });
-          }
-        );
-      });
-    });
+          );
+        }
+      );
+    } catch (error) {
+      console.error("Error in createOrder:", error);
+      res.status(400).json({ status: "failed", error: "Bad request" });
+    }
   },
   getAllOrder: async (req, res) => {
     try {
-      const sql = "SELECT * FROM orders";
+      const sql = "SELECT * FROM ORDERS";
       db.query(sql, (err, result) => {
         res.status(200).json({
           status: "success",
@@ -129,6 +83,111 @@ module.exports = {
       });
     } catch (error) {
       res.status(400).json(error);
+    }
+  },
+
+  showOrderDetails: async (req, res) => {
+    try {
+      const { order_id } = req.params;
+      console.log("order_id", order_id);
+
+      // Query order details
+      const sql = `
+      SELECT 
+          o.*,
+          od.detail_id,
+          od.detail_price,
+          od.item_id,
+          od.quantity,
+          p.product_name,
+          p.product_price,
+          p.product_thumbnail,
+          c.category_name,
+          sc.sub_name,
+          sc.category_id,
+          sc.sub_id,
+          s.size_name,
+          i.stock
+          FROM 
+              ORDERS o
+          JOIN 
+              ORDER_DETAIL od ON o.order_id = od.order_id
+          JOIN 
+              ITEM i ON od.item_id = i.item_id
+          JOIN 
+              PRODUCT p ON i.product_id = p.product_id
+          JOIN 
+              CATEGORY c ON p.category_id = c.category_id
+          JOIN 
+              SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+          JOIN 
+              SIZE_CATEGORY s ON i.size_id = s.size_id
+          WHERE 
+              o.order_id = ?;
+    `;
+
+      db.query(sql, [order_id], (err, result) => {
+        if (err) {
+          console.error("Error retrieving order details:", err);
+          return res.status(500).json({
+            status: "failed",
+            error: "Internal Server Error",
+          });
+        }
+
+        if (result.length === 0) {
+          return res.status(404).json({
+            status: "failed",
+            error: "Order not found",
+          });
+        }
+
+        // Consolidate order details
+        const orderDetails = result.map((row) => ({
+          detail_id: row.detail_id,
+          detail_price: row.detail_price,
+          item_id: row.item_id,
+          quantity: row.quantity,
+          product: {
+            product_name: row.product_name,
+            product_price: row.product_price,
+            product_thumbnail: row.product_thumbnail,
+            category: {
+              category_name: row.category_name,
+            },
+            sub_category: {
+              sub_name: row.sub_name,
+              category_id: row.category_id,
+              sub_id: row.sub_id,
+            },
+          },
+          size: {
+            size_name: row.size_name,
+            stock: row.stock,
+          },
+        }));
+
+        res.status(200).json({
+          status: "success",
+          data: {
+            order_id: result[0].order_id,
+            order_quantity: result[0].order_quantity,
+            order_address: result[0].order_address,
+            shipping_address: result[0].shipping_address,
+            phoneNumber: result[0].phoneNumber,
+            order_date: result[0].order_date,
+            order_status: result[0].order_status,
+            total_price: result[0].total_price,
+            order_details: orderDetails,
+          },
+        });
+      });
+    } catch (error) {
+      console.error("Error retrieving order details:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
+      });
     }
   },
 
@@ -166,7 +225,7 @@ module.exports = {
         totalPrice,
         pMethod,
         shippingCost,
-        orderID
+        orderID,
       ];
 
       // Execute the update query
@@ -239,11 +298,11 @@ module.exports = {
   deleteById: async (req, res) => {
     try {
       const orderID = req.params.orderID;
-  
+
       // Delete order details first
       const deleteOrderDetailsSql = "DELETE FROM order_detail WHERE orderID =?";
       const orderDetailsValue = [orderID];
-      
+
       db.query(deleteOrderDetailsSql, orderDetailsValue, (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -251,11 +310,11 @@ module.exports = {
             message: "Error deleting order details",
           });
         }
-  
+
         // Now, delete the order
         const deleteOrderSql = "DELETE FROM orders WHERE orderID =?";
         const orderValue = [orderID];
-  
+
         db.query(deleteOrderSql, orderValue, (err, result) => {
           if (err) {
             return res.status(500).json({
@@ -263,7 +322,7 @@ module.exports = {
               message: "Error deleting order",
             });
           }
-  
+
           res.json({
             status: "success",
             message: `Successfully deleted order and related details for orderID ${orderID}!`,
@@ -276,7 +335,7 @@ module.exports = {
         message: "Bad request",
       });
     }
-  },  
+  },
   getOrderDetaiLs: async (req, res) => {
     try {
       const orderID = req.params.orderID;
@@ -373,7 +432,7 @@ module.exports = {
           res.status(400).json(err);
           return;
         }
-  
+
         res.json({
           status: "success",
           message: "Successfully deleted all records from 'orders' table!",
@@ -391,10 +450,11 @@ module.exports = {
           res.status(400).json(err);
           return;
         }
-  
+
         res.json({
           status: "success",
-          message: "Successfully deleted all records from 'order_detail' table!",
+          message:
+            "Successfully deleted all records from 'order_detail' table!",
         });
       });
     } catch (err) {
@@ -403,9 +463,9 @@ module.exports = {
   },
   displayOrderDetailInformation: async (req, res) => {
     try {
-        const orderID = req.params.orderID;
-        // SQL query to retrieve order details along with product name and price
-        const getOrderDetailsSql = `
+      const orderID = req.params.orderID;
+      // SQL query to retrieve order details along with product name and price
+      const getOrderDetailsSql = `
             SELECT 
                 od.productID,
                 p.name,
@@ -420,19 +480,19 @@ module.exports = {
                 od.orderID = ?
         `;
 
-        // Execute the query
-        db.query(getOrderDetailsSql, [orderID], (err, orderDetails) => {
-            if (err) {
-                console.error("Error retrieving order details:", err);
-                return res.status(500).json({ error: "Internal Server Error" });
-            }
+      // Execute the query
+      db.query(getOrderDetailsSql, [orderID], (err, orderDetails) => {
+        if (err) {
+          console.error("Error retrieving order details:", err);
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
 
-            // Send the order details to the client
-            res.json({ orderDetails });
-        });
+        // Send the order details to the client
+        res.json({ orderDetails });
+      });
     } catch (err) {
-        console.error("Error in displayOrderDetailInformation:", err);
-        res.status(500).json({ error: "Internal Server Error" });
+      console.error("Error in displayOrderDetailInformation:", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-}
+  },
 };
