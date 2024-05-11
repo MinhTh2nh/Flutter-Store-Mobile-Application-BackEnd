@@ -4,24 +4,36 @@ require("dotenv").config();
 module.exports = {
   createProduct: (req, res) => {
     const obj = {
-      image: req.body.image,
-      name: req.body.name,
-      price: req.body.price,
-      description: req.body.description,
-      quantity: req.body.quantity,
-      productType: req.body.productType,
-      status: req.body.quantity === 0 ? "Unavailable" : "Available",
+      product_name: req.body.product_name,
+      product_price: req.body.product_price,
+      product_thumbnail: req.body.product_thumbnail,
+      product_description: req.body.product_description,
+      category_id: req.body.category_id,
+      sub_id: req.body.sub_id,
+      total_stock: req.body.total_stock,
+      status: "Available",
     };
-
-    const productData = obj;
-
-    const insertQuery = "INSERT INTO products SET ?";
-
+  
+    const productData = [
+      obj.product_name,
+      obj.product_price,
+      obj.product_thumbnail,
+      obj.product_description,
+      obj.category_id,
+      obj.sub_id,
+      obj.total_stock,
+      obj.status,
+    ];
+  
+    const insertQuery = `
+      INSERT INTO PRODUCT 
+      SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=?
+    `;
     db.query(insertQuery, productData, (error, result) => {
       if (error) {
         return res.status(400).json(error);
       }
-
+  
       return res.json({
         status: "success",
         message: "Successfully create product!",
@@ -29,8 +41,7 @@ module.exports = {
       });
     });
   },
-
-
+  
   getAllProducts: async (req, res) => {
     try {
       let sql = `
@@ -125,63 +136,63 @@ module.exports = {
 
   editProductById: async (req, res) => {
     try {
-      const product_id = req.params.product_id;
-      const {
-        image,
-        name,
-        price,
-        description,
-        quantity,
-        productType,
-        status
-      } =
-      req.body;
+        const product_id = req.params.product_id;
+        const {
+            product_name,
+            product_price,
+            product_thumbnail,
+            product_description,
+            category_id,
+            sub_id,
+            total_stock,
+            status 
+        } = req.body;
 
-      const updatedStatus = quantity === 0 ? "Unavailable" : status;
+        const updatedStatus = total_stock === 0 ? "Unavailable" : status;
 
-      const updateSql =
-        "UPDATE products SET image=?, name=?, price=?, description=?, quantity=?, productType=?, status=? WHERE product_id=?";
+        const updateSql = "UPDATE PRODUCT SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=? WHERE product_id=?";
 
-      const updateValues = [
-        image,
-        name,
-        price,
-        description,
-        quantity,
-        productType,
-        updatedStatus,
-        product_id,
-      ];
+        const updateValues = [
+            product_name,
+            product_price,
+            product_thumbnail,
+            product_description,
+            category_id,
+            sub_id,
+            total_stock,
+            updatedStatus,
+            product_id,
+        ];
 
-      db.query(updateSql, updateValues, (updateErr, updateResult) => {
-        if (updateErr) {
-          return res.status(500).json({
-            status: "error",
-            message: "Internal server error",
-            error: updateErr.message,
-          });
-        }
+        db.query(updateSql, updateValues, (updateErr, updateResult) => {
+            if (updateErr) {
+                return res.status(500).json({
+                    status: "error",
+                    message: "Internal server error",
+                    error: updateErr.message,
+                });
+            }
 
-        if (updateResult.affectedRows === 0) {
-          return res.status(404).json({
-            status: "error",
-            message: `Product with ID ${product_id} not found`,
-          });
-        }
+            if (updateResult.affectedRows === 0) {
+                return res.status(404).json({
+                    status: "error",
+                    message: `Product with ID ${product_id} not found`,
+                });
+            }
 
-        res.json({
-          status: "success",
-          message: `Successfully updated product with ID ${product_id}!`,
+            res.json({
+                status: "success",
+                message: `Successfully updated product with ID ${product_id}!`,
+            });
         });
-      });
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-        error: error.message,
-      });
+        res.status(400).json({
+            status: "error",
+            message: "Bad request",
+            error: error.message,
+        });
     }
-  },
+},
 
   getAllProductAvailable: async (req, res) => {
     try {
@@ -298,19 +309,38 @@ module.exports = {
 
   deleteProductController: async (req, res) => {
     try {
-      const productID = req.params.productID;
-      const sql = "DELETE FROM products WHERE productID =?";
-      const value = [productID];
-      db.query(sql, value, (err, result) => {
-        res.json({
-          status: "success",
-          message: `Successfully delete id of ${productID} !`,
+        const productID = req.params.product_id;
+        const updateSql = "UPDATE PRODUCT SET STATUS = 'Unavailable' WHERE product_id = ?";
+        const updateValues = [productID];
+
+        db.query(updateSql, updateValues, (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    status: "error",
+                    message: "Internal server error",
+                    error: err.message,
+                });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    status: "error",
+                    message: `Product with ID ${productID} not found`,
+                });
+            }
+            res.json({
+                status: "success",
+                message: `Successfully updated status to 'Unavailable' for product with ID ${productID}!`,
+            });
         });
-      });
     } catch (err) {
-      res.status(400).json(error);
+        res.status(400).json({
+            status: "error",
+            message: "Bad request",
+            error: err.message,
+        });
     }
-  },
+},
+
   checkQuantityOfProduct: async (req, res) => {
     try {
       const productID = req.body.productID;
