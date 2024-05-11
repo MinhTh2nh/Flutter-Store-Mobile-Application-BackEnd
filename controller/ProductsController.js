@@ -4,24 +4,36 @@ require("dotenv").config();
 module.exports = {
   createProduct: (req, res) => {
     const obj = {
-      image: req.body.image,
-      name: req.body.name,
-      price: req.body.price,
-      description: req.body.description,
-      quantity: req.body.quantity,
-      productType: req.body.productType,
-      status: req.body.quantity === 0 ? "Unavailable" : "Available",
+      product_name: req.body.product_name,
+      product_price: req.body.product_price,
+      product_thumbnail: req.body.product_thumbnail,
+      product_description: req.body.product_description,
+      category_id: req.body.category_id,
+      sub_id: req.body.sub_id,
+      total_stock: req.body.total_stock,
+      status: "Available",
     };
-
-    const productData = obj;
-
-    const insertQuery = "INSERT INTO products SET ?";
-
+  
+    const productData = [
+      obj.product_name,
+      obj.product_price,
+      obj.product_thumbnail,
+      obj.product_description,
+      obj.category_id,
+      obj.sub_id,
+      obj.total_stock,
+      obj.status,
+    ];
+  
+    const insertQuery = `
+      INSERT INTO PRODUCT 
+      SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=?
+    `;
     db.query(insertQuery, productData, (error, result) => {
       if (error) {
         return res.status(400).json(error);
       }
-
+  
       return res.json({
         status: "success",
         message: "Successfully create product!",
@@ -29,8 +41,7 @@ module.exports = {
       });
     });
   },
-
-
+  
   getAllProducts: async (req, res) => {
     try {
       let sql = `
