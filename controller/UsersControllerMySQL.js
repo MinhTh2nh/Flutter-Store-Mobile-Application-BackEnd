@@ -32,7 +32,7 @@ module.exports = {
           return res.status(401).json({
             status: "error",
             error: `Email "${email}" already exists!`,
-          });
+          });0
         }
         // Hash the user's password before storing it
         const hashedPassword = await bcrypt.hash(password, 10);

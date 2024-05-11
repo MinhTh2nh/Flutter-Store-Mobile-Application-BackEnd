@@ -17,10 +17,11 @@ router.get("/get/category/query", productsController.getByProductCategory);
 router.get("/get/:product_id", productsController.getProductById);
 router.get("/get/itemList/:product_id", productsController.getAllItems);
 
-router.post("/create", productsController.createProduct);
 router.put("/update/:product_id", productsController.editProductById);
-router.delete("/delete/:product_id", productsController.deleteProductController);
+router.put("/delete/:product_id", productsController.deleteProductController);
 
+
+router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
 //Un-Test
