@@ -5,13 +5,24 @@ module.exports = function validateRegisterInput(data) {
   let errors = {
     status: "",
     message: {
+      name: "",
       email: "",
       password: "",
     },
   };
 
+  data.name = !isEmpty(data.name) ? data.name : "";
   data.email = !isEmpty(data.email) ? data.email : "";
   data.password = !isEmpty(data.password) ? data.password : "";
+
+  // Email validator
+  if (Validator.isEmpty(data.name)) {
+    errors.status = 401;
+    errors.message = {
+      ...errors.message,
+      name: "Name is required.",
+    };
+  }
 
   // Email validator
   if (Validator.isEmpty(data.email)) {
@@ -42,11 +53,10 @@ module.exports = function validateRegisterInput(data) {
     })
   ) {
     (errors.status = 401),
-      (errors.message = {
-        ...errors.message,
-        password:
-          "Password must be at least 8 characters either under 30 characters.",
-      });
+    (errors.message = {
+      ...errors.message,
+      password: "Password must be at least 8 characters either under 30 characters.",
+    });
   }
   return {
     errors,

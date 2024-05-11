@@ -17,42 +17,62 @@ module.exports = {
         return res.status(errors.status).json(errors);
       }
 
-      // Check if the email already exists
-      const checkEmailQuery = "SELECT * FROM CUSTOMER WHERE email = ?";
-
-      db.query(checkEmailQuery, [email], async (err, result) => {
-        if (err) {
-          return res.status(500).json({
+      register: async (req, res) => {
+        try {
+          const { name, email, password } = req.body;
+          const obj = { name, email, password };
+    
+          // validation register
+          const { errors, isValid } = validateRegisterInput(obj);
+    
+          if (!isValid) {
+            return res.status(errors.status).json(errors);
+          }
+    
+          // Check if the email already exists
+          const checkEmailQuery = "SELECT * FROM CUSTOMER WHERE email = ?";
+    
+          db.query(checkEmailQuery, [email], async (err, result) => {
+            if (err) {
+              return res.status(500).json({
+                status: "failed",
+                error: "Internal Server Error",
+              });
+            }
+    
+            if (result.length > 0) {
+              return res.status(401).json({
+                status: "error",
+                error: `Email "${email}" already exists!`,
+              });
+            }
+            // Hash the user's password before storing it
+            const hashedPassword = await bcrypt.hash(password, 10);
+            // If email doesn't exist, insert the new user
+            const insertUserQuery = "INSERT INTO CUSTOMER SET ?";
+            db.query(
+              insertUserQuery,
+              { name, email, password: hashedPassword },
+              (err, result) => {
+                if (err) {
+                  return res.status(400).json(err);
+                }
+                res.json({
+                  status: "success",
+                  message: "Successfully created account!",
+                  data: result,
+                });
+              }
+            );
+          });
+        } catch (error) {
+          console.error("Registration error:", error);
+          res.status(500).json({
             status: "failed",
             error: "Internal Server Error",
           });
         }
-
-        if (result.length > 0) {
-          return res.status(401).json({
-            status: "error",
-            error: `Email "${email}" already exists!`,
-          });
-        }
-        // Hash the user's password before storing it
-        const hashedPassword = await bcrypt.hash(password, 10);
-        // If email doesn't exist, insert the new user
-        const insertUserQuery = "INSERT INTO CUSTOMER SET ?";
-        db.query(
-          insertUserQuery,
-          { name, email, password: hashedPassword },
-          (err, result) => {
-            if (err) {
-              return res.status(400).json(err);
-            }
-            res.json({
-              status: "success",
-              message: "Successfully created account!",
-              data: result,
-            });
-          }
-        );
-      });
+      }
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({
@@ -129,65 +149,65 @@ module.exports = {
     }
   },
 
-  loginAdmin: async (req, res) => {
-    try {
-      const email = req.body.email;
-      const password = req.body.password;
-      const sql = `SELECT * FROM users WHERE email = ?`;
-      db.query(sql, [email], async (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            status: "failed",
-            error: "Internal Server Error",
-          });
-        }
-        // Check if user exists
-        if (result.length === 0) {
-          return res.status(404).json({
-            status: "failed",
-            error: "User not found",
-          });
-        }
-        const user = result[0];
+  // loginAdmin: async (req, res) => {
+  //   try {
+  //     const email = req.body.email;
+  //     const password = req.body.password;
+  //     const sql = `SELECT * FROM users WHERE email = ?`;
+  //     db.query(sql, [email], async (err, result) => {
+  //       if (err) {
+  //         return res.status(500).json({
+  //           status: "failed",
+  //           error: "Internal Server Error",
+  //         });
+  //       }
+  //       // Check if user exists
+  //       if (result.length === 0) {
+  //         return res.status(404).json({
+  //           status: "failed",
+  //           error: "User not found",
+  //         });
+  //       }
+  //       const user = result[0];
 
-        if (!user || user.role !== "Admin") {
-          return res
-            .status(404)
-            .json({ status: "failed", error: "Admin's email not found" });
-        }
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (passwordMatch) {
-          const payload = {
-            userID: user.userID,
-            email: user.email,
-            name: user.name,
-          };
-          jwt.sign(
-            payload,
-            process.env.PRIVATE_KEY,
-            { expiresIn: 100 },
-            (err, token) => {
-              res.json({
-                status: "success",
-                message: "You're an admin!",
-                token: token,
-              });
-            }
-          );
-        } else {
-          return res.status(404).json({
-            status: "failed",
-            error: "Password incorrect",
-          });
-        }
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ status: "failed", error: "Internal Server Error" });
-    }
-  },
+  //       if (!user || user.role !== "Admin") {
+  //         return res
+  //           .status(404)
+  //           .json({ status: "failed", error: "Admin's email not found" });
+  //       }
+  //       const passwordMatch = await bcrypt.compare(password, user.password);
+  //       if (passwordMatch) {
+  //         const payload = {
+  //           userID: user.userID,
+  //           email: user.email,
+  //           name: user.name,
+  //         };
+  //         jwt.sign(
+  //           payload,
+  //           process.env.PRIVATE_KEY,
+  //           { expiresIn: 100 },
+  //           (err, token) => {
+  //             res.json({
+  //               status: "success",
+  //               message: "You're an admin!",
+  //               token: token,
+  //             });
+  //           }
+  //         );
+  //       } else {
+  //         return res.status(404).json({
+  //           status: "failed",
+  //           error: "Password incorrect",
+  //         });
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //     res
+  //       .status(500)
+  //       .json({ status: "failed", error: "Internal Server Error" });
+  //   }
+  // },
 
   //get all users
   getAllUsers: async (req, res) => {
@@ -337,23 +357,6 @@ module.exports = {
   addCustomerDetail: async (req, res) => {
     try {
       const { customer_id, phone, address } = req.body;
-
-      // Check if the customer exists
-      const customerExist = await new Promise((resolve, reject) => {
-        const checkCustomerSql = `SELECT * FROM CUSTOMER WHERE customer_id = ?`;
-        db.query(checkCustomerSql, [customer_id], (err, result) => {
-          if (err) reject(err);
-          resolve(result.length > 0);
-        });
-      });
-
-      if (!customerExist) {
-        return res.status(404).json({
-          status: "failed",
-          error: "Customer not found",
-        });
-      }
-
       // Insert new customer detail
       const insertSql = `INSERT INTO CUSTOMER_DETAIL (customer_id, phone, address) VALUES (?, ?, ?)`;
       db.query(insertSql, [customer_id, phone, address], (err, result) => {
@@ -378,6 +381,7 @@ module.exports = {
       });
     }
   },
+
   getCustomerDetail: async (req, res) => {
     try {
       const { customer_id } = req.params;
@@ -401,7 +405,7 @@ module.exports = {
         }
 
         // Return customer detail
-        const customerDetail = result[0];
+        const customerDetail = result;
         res.status(200).json({
           status: "success",
           data: customerDetail,
