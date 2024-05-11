@@ -21,7 +21,7 @@ router.get("/get/itemList/:product_id", productsController.getAllItems);
 router.put("/update/:product_id", productsController.editProductById);
 router.put("/delete/:product_id", productsController.deleteProductController);
 
-
+router.post("/item/create", productsController.createProductItem);
 router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
