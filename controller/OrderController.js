@@ -71,18 +71,115 @@ module.exports = {
       res.status(400).json({ status: "failed", error: "Bad request" });
     }
   },
-  getAllOrder: async (req, res) => {
+  getAllOrders: async (req, res) => {
     try {
-      const sql = "SELECT * FROM ORDERS";
+      // Query all orders
+      const sql = `
+      SELECT 
+        o.order_id,
+        o.order_date,
+        o.order_status,
+        o.total_price,
+        od.detail_id,
+        od.quantity,
+        p.product_id,
+        p.product_name,
+        p.product_price,
+        p.product_thumbnail,
+        p.product_description,
+        c.category_id,
+        c.category_name,
+        sc.sub_id,
+        sc.sub_name,
+        s.size_id,
+        s.size_name,
+        i.stock
+      FROM 
+        ORDERS o
+      JOIN 
+        ORDER_DETAIL od ON o.order_id = od.order_id
+      JOIN 
+        ITEM i ON od.item_id = i.item_id
+      JOIN 
+        PRODUCT p ON i.product_id = p.product_id
+      JOIN 
+        CATEGORY c ON p.category_id = c.category_id
+      JOIN 
+        SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+      JOIN 
+        SIZE_CATEGORY s ON i.size_id = s.size_id;
+    `;
+
       db.query(sql, (err, result) => {
+        if (err) {
+          console.error("Error retrieving orders:", err);
+          return res.status(500).json({
+            status: "failed",
+            error: "Internal Server Error",
+          });
+        }
+
+        // Group orders by order_id
+        const orders = result.reduce((acc, order) => {
+          const {
+            order_id,
+            order_date,
+            order_status,
+            total_price,
+            ...details
+          } = order;
+
+          if (!acc[order_id]) {
+            acc[order_id] = {
+              order_id,
+              order_date,
+              order_status,
+              total_price,
+              order_details: [],
+            };
+          }
+
+          acc[order_id].order_details.push({
+            detail_id: order.detail_id,
+            quantity: order.quantity,
+            product: {
+              product_id: order.product_id,
+              product_name: order.product_name,
+              product_price: order.product_price,
+              product_thumbnail: order.product_thumbnail,
+              product_description: order.product_description,
+              category: {
+                category_id: order.category_id,
+                category_name: order.category_name,
+              },
+              sub_category: {
+                sub_id: order.sub_id,
+                sub_name: order.sub_name,
+              },
+              size: {
+                size_id: order.size_id,
+                size_name: order.size_name,
+              },
+              stock: order.stock,
+            },
+          });
+
+          return acc;
+        }, {});
+
+        const orderedOrders = Object.values(orders);
+
         res.status(200).json({
           status: "success",
-          message: "Successfully get all orders!",
-          data: result,
+          data: orderedOrders,
         });
       });
     } catch (error) {
-      res.status(400).json(error);
+      console.error("Error retrieving orders:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
+      });
     }
   },
 
@@ -191,239 +288,261 @@ module.exports = {
     }
   },
 
-  editOrderById: async (req, res) => {
+  updateOrderById: async (req, res) => {
     try {
-      const orderID = req.params.orderID;
+      const { order_id } = req.params;
       const {
-        firstName,
-        lastName,
-        email,
-        country,
-        city,
-        address,
+        order_quantity,
+        order_address,
+        shipping_address,
         phoneNumber,
-        postalCode,
-        status,
-        totalPrice,
-        pMethod,
-        shippingCost,
+        order_status,
+        total_price,
+        items,
       } = req.body;
 
-      const updateSql =
-        "UPDATE orders SET firstName=?, lastName=?, email=?, country=?, city=?, address=?, phoneNumber=?, postalCode=?, status=?, totalPrice=? , pMethod=?, shippingCost=? WHERE orderID=?";
+      // Update order details in the ORDERS table
+      const updateOrderSql = `
+      UPDATE ORDERS
+      SET 
+        order_quantity = ?,
+        order_address = ?,
+        shipping_address = ?,
+        phoneNumber = ?,
+        order_status = ?,
+        total_price = ?
+      WHERE
+        order_id = ?;
+    `;
 
-      const updateValues = [
-        firstName,
-        lastName,
-        email,
-        country,
-        city,
-        address,
-        phoneNumber,
-        postalCode,
-        status,
-        totalPrice,
-        pMethod,
-        shippingCost,
-        orderID,
-      ];
-
-      // Execute the update query
-      const updateResult = await new Promise((resolve, reject) => {
-        db.query(updateSql, updateValues, (updateErr, result) => {
-          if (updateErr) {
-            reject(updateErr);
-          } else {
-            resolve(result);
-          }
-        });
-      });
-
-      if (updateResult.affectedRows === 0) {
-        return res.status(404).json({
-          status: "error",
-          message: `Order with ID ${orderID} not found`,
-        });
-      }
-
-      // Check if the status is set to "Cancelled"
-      if (status === "Cancelled") {
-        // Retrieve order details to get product IDs and quantities
-        const getOrder_detailSql =
-          "SELECT productID, orderQuantity FROM order_detail WHERE orderID = ?";
-
-        db.query(getOrder_detailSql, [orderID], (err, order_detailRows) => {
+      db.query(
+        updateOrderSql,
+        [
+          order_quantity,
+          order_address,
+          shipping_address,
+          phoneNumber,
+          order_status,
+          total_price,
+          order_id,
+        ],
+        (err, result) => {
           if (err) {
-            console.error("Error retrieving order details:", err);
-            return;
-          }
-
-          // Log the content of order_detailRows
-          console.log("order_detailRows:", order_detailRows);
-
-          // Check if order_detailRows is an array and has at least one row
-          if (Array.isArray(order_detailRows) && order_detailRows.length > 0) {
-            // Update product quantities in the products table
-            for (const orderDetail of order_detailRows) {
-              const updateProductQuantitySql =
-                "UPDATE products SET quantity = quantity + ? WHERE productID = ?";
-              db.query(
-                updateProductQuantitySql,
-                [orderDetail.orderQuantity, orderDetail.productID],
-                (err) => {
-                  if (err) {
-                    console.error("Error updating product quantity:", err);
-                  }
-                }
-              );
-            }
-          } else {
-            console.error("No order details found for orderID:", orderID);
-          }
-        });
-      }
-
-      res.json({
-        status: "success",
-        message: `Successfully updated Order with ID ${orderID}!`,
-      });
-    } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-        error: error.message,
-      });
-    }
-  },
-  deleteById: async (req, res) => {
-    try {
-      const orderID = req.params.orderID;
-
-      // Delete order details first
-      const deleteOrderDetailsSql = "DELETE FROM order_detail WHERE orderID =?";
-      const orderDetailsValue = [orderID];
-
-      db.query(deleteOrderDetailsSql, orderDetailsValue, (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            status: "error",
-            message: "Error deleting order details",
-          });
-        }
-
-        // Now, delete the order
-        const deleteOrderSql = "DELETE FROM orders WHERE orderID =?";
-        const orderValue = [orderID];
-
-        db.query(deleteOrderSql, orderValue, (err, result) => {
-          if (err) {
+            console.error("Error updating order:", err);
             return res.status(500).json({
-              status: "error",
-              message: "Error deleting order",
+              status: "failed",
+              error: "Internal Server Error",
             });
           }
 
-          res.json({
-            status: "success",
-            message: `Successfully deleted order and related details for orderID ${orderID}!`,
-          });
-        });
-      });
-    } catch (err) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-      });
-    }
-  },
-  getOrderDetaiLs: async (req, res) => {
-    try {
-      const orderID = req.params.orderID;
-      const sql = "Select * FROM order_detail WHERE orderID =?";
-      const value = [orderID];
-      db.query(sql, value, (err, result) => {
-        res.json({
-          status: "success",
-          message: `Successfully fetch details id of ${orderID} !`,
-          data: result,
-        });
-      });
-    } catch (err) {
-      res.status(400).json(error);
-    }
-  },
-  getOrderById: async (req, res) => {
-    try {
-      const orderID = req.params.orderID;
-      const sql = "SELECT * FROM orders WHERE orderID = ?";
-      const value = [orderID];
+          // Update order details in the ORDER_DETAIL table
+          const updateOrderDetailsSql = `
+          UPDATE ORDER_DETAIL
+          SET 
+            detail_price = ?,
+            quantity = ?
+          WHERE
+            order_id = ? AND item_id = ?;
+        `;
 
-      db.query(sql, value, (err, result) => {
+          let updateCount = 0;
+          let errorOccurred = false;
+
+          items.forEach((item) => {
+            db.query(
+              updateOrderDetailsSql,
+              [item.detail_price, item.quantity, order_id, item.item_id],
+              (err, result) => {
+                updateCount++;
+
+                if (err) {
+                  console.error("Error updating order details:", err);
+                  errorOccurred = true;
+                }
+
+                if (updateCount === items.length) {
+                  if (errorOccurred) {
+                    return res.status(500).json({
+                      status: "failed",
+                      error: "Internal Server Error",
+                    });
+                  } else {
+                    res.status(200).json({
+                      status: "success",
+                      message: "Order updated successfully",
+                    });
+                  }
+                }
+              }
+            );
+          });
+        }
+      );
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(400).json({ status: "failed", error: "Bad request" });
+    }
+  },
+
+deleteOrderById: async (req, res) => {
+  const { order_id } = req.params;
+
+  try {
+    // // Delete order details from the ORDER_DETAIL table
+    // const deleteOrderDetailsSql = `
+    //   DELETE FROM ORDER_DETAIL
+    //   WHERE order_id = ?;
+    // `;
+
+    // await db.query(deleteOrderDetailsSql, [order_id]);
+
+    // Delete order from the ORDERS table
+    const deleteOrderSql = `
+      DELETE FROM ORDERS
+      WHERE order_id = ?;
+    `;
+
+    await db.query(deleteOrderSql, [order_id]);
+
+    res.status(200).json({
+      status: "success",
+      message: "Order deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({
+      status: "failed",
+      error: "Internal Server Error",
+    });
+  }
+},
+
+
+  getOrdersByCustomerId: async (req, res) => {
+    try {
+      const { customer_id } = req.params;
+
+      // Query orders by customer_id
+      const sql = `
+      SELECT 
+        o.order_id,
+        o.order_date,
+        o.order_status,
+        o.total_price,
+        od.detail_id,
+        od.quantity,
+        p.product_id,
+        p.product_name,
+        p.product_price,
+        p.product_thumbnail,
+        p.product_description,
+        c.category_id,
+        c.category_name,
+        sc.sub_id,
+        sc.sub_name,
+        s.size_id,
+        s.size_name,
+        i.stock
+      FROM 
+        ORDERS o
+      JOIN 
+        ORDER_DETAIL od ON o.order_id = od.order_id
+      JOIN 
+        ITEM i ON od.item_id = i.item_id
+      JOIN 
+        PRODUCT p ON i.product_id = p.product_id
+      JOIN 
+        CATEGORY c ON p.category_id = c.category_id
+      JOIN 
+        SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+      JOIN 
+        SIZE_CATEGORY s ON i.size_id = s.size_id
+      WHERE 
+        o.customer_id = ?
+      ORDER BY 
+        o.order_date DESC;
+    `;
+
+      db.query(sql, [customer_id], (err, result) => {
         if (err) {
+          console.error("Error retrieving orders:", err);
           return res.status(500).json({
-            status: "error",
-            message: "Error retrieving order by ID",
-            error: err.message,
+            status: "failed",
+            error: "Internal Server Error",
           });
         }
 
         if (result.length === 0) {
           return res.status(404).json({
-            status: "error",
-            message: `Order with ID ${orderID} not found`,
+            status: "failed",
+            error: "No orders found for the specified customer",
           });
         }
 
-        res.json({
+        // Group orders by order_id
+        const orders = result.reduce((acc, order) => {
+          const {
+            order_id,
+            order_date,
+            order_status,
+            total_price,
+            ...details
+          } = order;
+
+          if (!acc[order_id]) {
+            acc[order_id] = {
+              order_id,
+              order_date,
+              order_status,
+              total_price,
+              order_details: [],
+            };
+          }
+
+          acc[order_id].order_details.push({
+            detail_id: order.detail_id,
+            quantity: order.quantity,
+            product: {
+              product_id: order.product_id,
+              product_name: order.product_name,
+              product_price: order.product_price,
+              product_thumbnail: order.product_thumbnail,
+              product_description: order.product_description,
+              category: {
+                category_id: order.category_id,
+                category_name: order.category_name,
+              },
+              sub_category: {
+                sub_id: order.sub_id,
+                sub_name: order.sub_name,
+              },
+              size: {
+                size_id: order.size_id,
+                size_name: order.size_name,
+              },
+              stock: order.stock,
+            },
+          });
+
+          return acc;
+        }, {});
+
+        const orderedOrders = Object.values(orders);
+
+        res.status(200).json({
           status: "success",
-          message: `Successfully retrieved Order with ID ${orderID}!`,
-          data: result[0],
+          data: orderedOrders,
         });
       });
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-        error: error.message,
+      console.error("Error retrieving orders:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
       });
     }
   },
-  getOrderByUserID: async (req, res) => {
-    try {
-      const userID = req.params.userID;
-      const sql = "SELECT * FROM orders WHERE userID = ?";
-      const value = [userID];
 
-      db.query(sql, value, (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            status: "error",
-            message: "Error retrieving order by ID",
-            error: err.message,
-          });
-        }
-
-        if (result.length === 0) {
-          return res.status(404).json({
-            status: "error",
-            message: `Order with ID ${userID} not found`,
-          });
-        }
-
-        res.json({
-          status: "success",
-          message: `Successfully retrieved Order with ID ${userID}!`,
-          data: result,
-        });
-      });
-    } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: "Bad request",
-        error: error.message,
-      });
-    }
-  },
   deleteAllOrder: async (req, res) => {
     try {
       const sql = "DELETE FROM orders ";
@@ -439,59 +558,6 @@ module.exports = {
         });
       });
     } catch (err) {
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  },
-  deleteAllOrderDetails: async (req, res) => {
-    try {
-      const sql = "DELETE FROM order_detail ";
-      db.query(sql, (err, result) => {
-        if (err) {
-          res.status(400).json(err);
-          return;
-        }
-
-        res.json({
-          status: "success",
-          message:
-            "Successfully deleted all records from 'order_detail' table!",
-        });
-      });
-    } catch (err) {
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  },
-  displayOrderDetailInformation: async (req, res) => {
-    try {
-      const orderID = req.params.orderID;
-      // SQL query to retrieve order details along with product name and price
-      const getOrderDetailsSql = `
-            SELECT 
-                od.productID,
-                p.name,
-                p.price,
-                p.image,
-                od.orderQuantity
-            FROM 
-                order_detail od
-            JOIN
-                products p ON od.productID = p.productID
-            WHERE
-                od.orderID = ?
-        `;
-
-      // Execute the query
-      db.query(getOrderDetailsSql, [orderID], (err, orderDetails) => {
-        if (err) {
-          console.error("Error retrieving order details:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
-        }
-
-        // Send the order details to the client
-        res.json({ orderDetails });
-      });
-    } catch (err) {
-      console.error("Error in displayOrderDetailInformation:", err);
       res.status(500).json({ error: "Internal Server Error" });
     }
   },

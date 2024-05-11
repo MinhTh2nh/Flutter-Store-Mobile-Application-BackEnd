@@ -5,19 +5,18 @@ const { validateAdmin, validateUser } = require("../validator/UsersValidator");
 
 //For the MongoDB database -- Start Here
 router.post("/create", orderController.createOrder);
-router.put("/edit/:ỏdẻ_id", orderController.editOrderById);
+router.put("/update/:order_id", orderController.updateOrderById);
 router.get("/get/:order_id", orderController.showOrderDetails);
-router.get("/get", orderController.getAllOrder);
-router.get("/getOrderDetaiLs/:ỏdẻ_id", orderController.getOrderDetaiLs);
-router.get("/getOrder/:ỏdẻ_id", orderController.getOrderById);
+router.get("/get", orderController.getAllOrders);
 
-router.delete("/delete/:ỏdẻ_id", validateAdmin, orderController.deleteById);
-router.delete("/deleteAllOrderDetails", validateAdmin , orderController.deleteAllOrderDetails);
+router.delete(
+  "/delete/:order_id",
+//   validateAdmin,
+  orderController.deleteOrderById
+);
 router.delete("/deleteAllOrder", validateAdmin , orderController.deleteAllOrder);
 
-router.get("/getOrderByUserID/:userID", orderController.getOrderByUserID);
-
-router.get("/displayOrderDetailInformation/:ỏdẻ_id", orderController.displayOrderDetailInformation);
+router.get("/getOrderByUserID/:customer_id", orderController.getOrdersByCustomerId);
 
 //For the MongoDB database -- End Here
 
