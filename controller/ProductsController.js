@@ -103,7 +103,30 @@ module.exports = {
       res.status(400).json(error);
     }
   },
+  getSizeList : async (req, res) => {
+    try {
+      const sql = "SELECT * FROM SIZE_CATEGORY";
+      db.query(sql, (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch sizes.",
+            error: err.message,
+          });
+        }
 
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched sizes!",
+          data: result,
+        });
+      });
+    } catch {
+      res.status(400).json({
+        error: "Bad Request"
+      });
+    }
+  },
   getProductById: async (req, res) => {
     try {
       const product_id = req.params.product_id;
