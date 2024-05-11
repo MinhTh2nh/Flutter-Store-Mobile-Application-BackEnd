@@ -9,7 +9,7 @@ module.exports = {
     try {
       const { email, password } = req.body;
       const obj = { email, password };
-  
+      const nameTemp = "" ;
       // validation register
       const { errors, isValid } = validateRegisterInput(obj);
   
@@ -38,13 +38,22 @@ module.exports = {
         const hashedPassword = await bcrypt.hash(password, 10);
         // If email doesn't exist, insert the new user
         const insertUserQuery = 'INSERT INTO CUSTOMER SET ?';
-        db.query(insertUserQuery, { email, password: hashedPassword }, (err, result) => {
+        db.query(insertUserQuery, { email, password: hashedPassword, name: nameTemp }, (err, result) => {
           if (err) {
-            return res.status(400).json(err);
+            return res.status(400).json({
+              status: "failed",
+              error: "Failed to create account",
+            });
           }
-          res.json({
+  
+          // Generate token
+          const payload = { email };
+          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: 100 });
+  
+          res.status(201).json({
             status: "success",
             message: "Successfully created account!",
+            token: token,
             data: result,
           });
         });
