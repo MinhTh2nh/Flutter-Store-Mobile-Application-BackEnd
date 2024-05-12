@@ -10,12 +10,20 @@ module.exports = {
         order_address,
         shipping_address,
         phoneNumber,
-        order_status,
         total_price,
         items,
       } = req.body;
-      //insert order into ORDERS table
-      const insertOrderSql = `INSERT INTO ORDERS (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+      // Set the order status to "pending"
+      const order_status = "pending";
+
+      // Insert order into ORDERS table
+      const insertOrderSql = `
+      INSERT INTO ORDERS 
+        (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
       db.query(
         insertOrderSql,
         [
@@ -23,7 +31,7 @@ module.exports = {
           order_address,
           shipping_address,
           phoneNumber,
-          order_status,
+          order_status, // Set order status to "pending"
           total_price,
           customer_id,
         ],
@@ -32,13 +40,13 @@ module.exports = {
             console.error("Error inserting order:", err);
             return res
               .status(500)
-              .json({ status: "falied", error: "Internal Server Error" });
+              .json({ status: "failed", error: "Internal Server Error" });
           }
 
           const orderID = result.insertId;
 
-          //insert order details into ORDER_DETAILS table
-          const insertOrderDetailsSql = `INSERT INTO ORDER_DETAIL (detail_price, item_id,order_id, quantity) VALUES ?`;
+          // Insert order details into ORDER_DETAILS table
+          const insertOrderDetailsSql = `INSERT INTO ORDER_DETAIL (detail_price, item_id, order_id, quantity) VALUES ?`;
           const orderDetailValues = items.map((item) => [
             item.detail_price,
             item.item_id,
@@ -54,7 +62,7 @@ module.exports = {
                 console.error("Error inserting order details:", err);
                 return res
                   .status(500)
-                  .json({ status: "falied", error: "Internal Server Error" });
+                  .json({ status: "failed", error: "Internal Server Error" });
               }
 
               res.status(200).json({
@@ -71,6 +79,7 @@ module.exports = {
       res.status(400).json({ status: "failed", error: "Bad request" });
     }
   },
+
   getAllOrders: async (req, res) => {
     try {
       // Query all orders
@@ -384,39 +393,30 @@ module.exports = {
     }
   },
 
-deleteOrderById: async (req, res) => {
-  const { order_id } = req.params;
+  deleteOrderById: async (req, res) => {
+    const { order_id } = req.params;
 
-  try {
-    // // Delete order details from the ORDER_DETAIL table
-    // const deleteOrderDetailsSql = `
-    //   DELETE FROM ORDER_DETAIL
-    //   WHERE order_id = ?;
-    // `;
-
-    // await db.query(deleteOrderDetailsSql, [order_id]);
-
-    // Delete order from the ORDERS table
-    const deleteOrderSql = `
+    try {
+      // Delete order from the ORDERS table
+      const deleteOrderSql = `
       DELETE FROM ORDERS
       WHERE order_id = ?;
     `;
 
-    await db.query(deleteOrderSql, [order_id]);
+      await db.query(deleteOrderSql, [order_id]);
 
-    res.status(200).json({
-      status: "success",
-      message: "Order deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).json({
-      status: "failed",
-      error: "Internal Server Error",
-    });
-  }
-},
-
+      res.status(200).json({
+        status: "success",
+        message: "Order deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
+      });
+    }
+  },
 
   getOrdersByCustomerId: async (req, res) => {
     try {
