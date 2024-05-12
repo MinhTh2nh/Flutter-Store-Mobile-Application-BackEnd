@@ -388,13 +388,6 @@ deleteOrderById: async (req, res) => {
   const { order_id } = req.params;
 
   try {
-    // // Delete order details from the ORDER_DETAIL table
-    // const deleteOrderDetailsSql = `
-    //   DELETE FROM ORDER_DETAIL
-    //   WHERE order_id = ?;
-    // `;
-
-    // await db.query(deleteOrderDetailsSql, [order_id]);
 
     // Delete order from the ORDERS table
     const deleteOrderSql = `
