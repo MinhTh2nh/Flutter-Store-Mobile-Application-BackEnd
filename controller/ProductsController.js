@@ -103,7 +103,30 @@ module.exports = {
       res.status(400).json(error);
     }
   },
+  getSizeList : async (req, res) => {
+    try {
+      const sql = "SELECT * FROM SIZE_CATEGORY";
+      db.query(sql, (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch sizes.",
+            error: err.message,
+          });
+        }
 
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched sizes!",
+          data: result,
+        });
+      });
+    } catch {
+      res.status(400).json({
+        error: "Bad Request"
+      });
+    }
+  },
   getProductById: async (req, res) => {
     try {
       const product_id = req.params.product_id;
@@ -307,6 +330,55 @@ module.exports = {
     }
   },
 
+  createProductItem: async (req, res) => {
+    try {
+      const obj = {
+        product_id: req.body.product_id,
+        size_id: req.body.size_id,
+        stock: req.body.stock,
+      };
+  
+      const checkDuplicateQuery = `
+        SELECT * FROM ITEM 
+        WHERE product_id = ? AND size_id = ?
+      `;
+  
+      db.query(checkDuplicateQuery, [obj.product_id, obj.size_id], (err, result) => {
+        if (err) {
+          throw err; // Throw error if there's an issue with the query execution
+        }
+  
+        // If a duplicate item is found, return an error response
+        if (result.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "Product item with the same product_id and size_id already exists!",
+          });
+        }
+  
+        // If no duplicate item is found, proceed with the insertion
+        const insertQuery = `
+          INSERT INTO ITEM 
+          SET ?
+        `;
+  
+        db.query(insertQuery, obj, (err, result) => {
+          if (err) {
+            throw err; // Throw error if there's an issue with the query execution
+          }
+          res.status(200).json({
+            status: "success",
+            message: "Item created successfully!",
+            data: result,
+          });
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
+  
+  
   deleteProductController: async (req, res) => {
     try {
         const productID = req.params.product_id;

@@ -14,12 +14,14 @@ router.get("/get/category/sub_category/:category_id", productsController.getBySu
 router.get("/get/category/query", productsController.getByProductCategory);
 
 router.get("/get/:product_id", productsController.getProductById);
+router.get("/get/size/get", productsController.getSizeList);
+
 router.get("/get/itemList/:product_id", productsController.getAllItems);
 
 router.put("/update/:product_id", productsController.editProductById);
 router.put("/delete/:product_id", productsController.deleteProductController);
 
-
+router.post("/item/create", productsController.createProductItem);
 router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
