@@ -11,16 +11,16 @@ router.get("/get", orderController.getAllOrders);
 
 router.delete(
   "/delete/:order_id",
-//   validateAdmin,
+  //   validateAdmin,
   orderController.deleteOrderById
 );
-router.delete("/deleteAllOrder", validateAdmin , orderController.deleteAllOrder);
+router.delete("/deleteAllOrder", validateAdmin, orderController.deleteAllOrder);
 
-router.get("/getOrderByUserID/:customer_id", orderController.getOrdersByCustomerId);
+router.get(
+  "/getOrderByUserID/:customer_id",
+  orderController.getOrdersByCustomerId
+);
 
 //For the MongoDB database -- End Here
-
-
-
 
 module.exports = router;
