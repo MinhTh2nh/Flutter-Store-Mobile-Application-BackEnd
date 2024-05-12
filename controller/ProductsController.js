@@ -511,7 +511,52 @@ module.exports = {
       res.status(400).json(error);
     }
   },
+  createCategory: async (req, res) => {
+    try {
+      const obj = {
+        category_id: req.body.category_id,
+        sub_name: req.body.sub_name,
+      };
 
+      const checkDuplicateQuery = `
+        SELECT * FROM SUB_CATEGORY 
+        WHERE sub_name = ?
+      `;
+
+      db.query(checkDuplicateQuery, [obj.sub_name], (err, result) => {
+        if (err) {
+          throw err; // Throw error if there's an issue with the query execution
+        }
+
+        // If a duplicate item is found, return an error response
+        if (result.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "Subcategory with the same sub_name already exists!",
+          });
+        }
+
+        // If no duplicate item is found, proceed with the insertion
+        const insertQuery = `
+          INSERT INTO SUB_CATEGORY 
+          SET ?
+        `;
+
+        db.query(insertQuery, obj, (err, result) => {
+          if (err) {
+            throw err; // Throw error if there's an issue with the query execution
+          }
+          res.status(200).json({
+            status: "success",
+            message: "Sub-category created successfully!",
+            data: result,
+          });
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
   deleteProductController: async (req, res) => {
     try {
       const productID = req.params.product_id;

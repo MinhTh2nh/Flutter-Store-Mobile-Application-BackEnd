@@ -25,7 +25,7 @@ router.get("/update/category/:category_id", productsController.editCategoryById)
 
 router.post("/category/sub_category/create", productsController.createSubCategory);
 router.post("/item/create", productsController.createProductItem);
-router.post("/item/create", productsController.createProductItem);
+router.post("/category/create", productsController.createCategory);
 router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
