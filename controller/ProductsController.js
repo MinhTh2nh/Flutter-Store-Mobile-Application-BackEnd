@@ -13,7 +13,7 @@ module.exports = {
       total_stock: req.body.total_stock,
       status: "Available",
     };
-  
+
     const productData = [
       obj.product_name,
       obj.product_price,
@@ -24,7 +24,7 @@ module.exports = {
       obj.total_stock,
       obj.status,
     ];
-  
+
     const insertQuery = `
       INSERT INTO PRODUCT 
       SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=?
@@ -33,7 +33,7 @@ module.exports = {
       if (error) {
         return res.status(400).json(error);
       }
-  
+
       return res.json({
         status: "success",
         message: "Successfully create product!",
@@ -41,7 +41,7 @@ module.exports = {
       });
     });
   },
-  
+
   getAllProducts: async (req, res) => {
     try {
       let sql = `
@@ -103,7 +103,7 @@ module.exports = {
       res.status(400).json(error);
     }
   },
-  getSizeList : async (req, res) => {
+  getSizeList: async (req, res) => {
     try {
       const sql = "SELECT * FROM SIZE_CATEGORY";
       db.query(sql, (err, result) => {
@@ -159,63 +159,112 @@ module.exports = {
 
   editProductById: async (req, res) => {
     try {
-        const product_id = req.params.product_id;
-        const {
-            product_name,
-            product_price,
-            product_thumbnail,
-            product_description,
-            category_id,
-            sub_id,
-            total_stock,
-            status 
-        } = req.body;
+      const product_id = req.params.product_id;
+      const {
+        product_name,
+        product_price,
+        product_thumbnail,
+        product_description,
+        category_id,
+        sub_id,
+        total_stock,
+        status
+      } = req.body;
 
-        const updatedStatus = total_stock === 0 ? "Unavailable" : status;
+      const updatedStatus = total_stock === 0 ? "Unavailable" : status;
 
-        const updateSql = "UPDATE PRODUCT SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=? WHERE product_id=?";
+      const updateSql = "UPDATE PRODUCT SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=? WHERE product_id=?";
 
-        const updateValues = [
-            product_name,
-            product_price,
-            product_thumbnail,
-            product_description,
-            category_id,
-            sub_id,
-            total_stock,
-            updatedStatus,
-            product_id,
-        ];
+      const updateValues = [
+        product_name,
+        product_price,
+        product_thumbnail,
+        product_description,
+        category_id,
+        sub_id,
+        total_stock,
+        updatedStatus,
+        product_id,
+      ];
 
-        db.query(updateSql, updateValues, (updateErr, updateResult) => {
-            if (updateErr) {
-                return res.status(500).json({
-                    status: "error",
-                    message: "Internal server error",
-                    error: updateErr.message,
-                });
-            }
-
-            if (updateResult.affectedRows === 0) {
-                return res.status(404).json({
-                    status: "error",
-                    message: `Product with ID ${product_id} not found`,
-                });
-            }
-
-            res.json({
-                status: "success",
-                message: `Successfully updated product with ID ${product_id}!`,
-            });
-        });
-    } catch (error) {
-        res.status(400).json({
+      db.query(updateSql, updateValues, (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.status(500).json({
             status: "error",
-            message: "Bad request",
-            error: error.message,
+            message: "Internal server error",
+            error: updateErr.message,
+          });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Product with ID ${product_id} not found`,
+          });
+        }
+
+        res.json({
+          status: "success",
+          message: `Successfully updated product with ID ${product_id}!`,
         });
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: error.message,
+      });
     }
-},
+  },
+
+  editCategoryById: async (req, res) => {
+    try {
+      const category_id = req.params.category_id;
+      const {
+        category_name,
+        category_description,
+        category_thumbnail,
+      } = req.body;
+
+
+      const updateSql = "UPDATE CATEGORY SET category_name=?, category_description=?, category_thumbnail=? WHERE category_id=?";
+
+      const updateValues = [
+        category_name,
+        category_description,
+        category_thumbnail,
+        category_id,
+      ];
+
+      db.query(updateSql, updateValues, (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: updateErr.message,
+          });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Category with ID ${category_id} not found`,
+          });
+        }
+
+        res.json({
+          status: "success",
+          message: `Successfully updated Category with ID ${category_id}!`,
+        });
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: error.message,
+      });
+    }
+  },
 
   getAllProductAvailable: async (req, res) => {
     try {
@@ -237,9 +286,9 @@ module.exports = {
 
   getByProductCategory: async (req, res) => {
     try {
-        const category_name = req.query.category_name;
-        const sub_name = req.query.sub_name;
-        let sql = `
+      const category_name = req.query.category_name;
+      const sub_name = req.query.sub_name;
+      let sql = `
             SELECT 
                 p.*,
                 c.*,
@@ -252,31 +301,69 @@ module.exports = {
                 1=1 ${category_name ? 'AND c.category_name = ?' : ''} ${sub_name ? 'AND sc.sub_name = ?' : ''} 
         `;
 
-        const params = [];
-        if (category_name) params.push(category_name);
-        if (sub_name) params.push(sub_name);
+      const params = [];
+      if (category_name) params.push(category_name);
+      if (sub_name) params.push(sub_name);
 
-        db.query(sql, params, (err, result) => {
-            if (err) {
-                return res.status(500).json({
-                    status: "error",
-                    message: "Failed to fetch products.",
-                    error: err.message,
-                });
-            }
+      db.query(sql, params, (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch products.",
+            error: err.message,
+          });
+        }
 
-            res.status(200).json({
-                status: "success",
-                message: "Successfully fetched products!",
-                data: result,
-            });
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched products!",
+          data: result,
         });
+      });
     } catch (error) {
-        res.status(400).json(error);
+      res.status(400).json(error);
     }
-},
+  },
 
+  getByProductCategoryId: async (req, res) => {
+    try {
+      const sql = "SELECT * FROM CATEGORY where category_id = ?";
 
+      db.query(sql, [req.params.category_id], (err, result) => {
+        if (err) {
+          console.error("Error fetching category:", err);
+          return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch category",
+            error: err.message // Send error message for debugging
+          });
+        }
+
+        // Check if category exists
+        if (result.length === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: "Category not found"
+          });
+        }
+
+        // Category found, send response
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched category",
+          data: result[0] // Assuming category_id is unique, so only one result
+        });
+      });
+    } catch (error) {
+      // Catch synchronous errors (unlikely in this case)
+      console.error("Error:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        error: error.message // Send error message for debugging
+      });
+    }
+  },
 
   getByProductCategoryList: async (req, res) => {
     try {
@@ -300,7 +387,7 @@ module.exports = {
 
       const sql = "SELECT * FROM SUB_CATEGORY WHERE category_id = ?";
 
-      db.query(sql, [category_id] , (err, result) => {
+      db.query(sql, [category_id], (err, result) => {
         res.status(200).json({
           status: "success",
           message: "Successfully get all categories!",
@@ -337,17 +424,17 @@ module.exports = {
         size_id: req.body.size_id,
         stock: req.body.stock,
       };
-  
+
       const checkDuplicateQuery = `
         SELECT * FROM ITEM 
         WHERE product_id = ? AND size_id = ?
       `;
-  
+
       db.query(checkDuplicateQuery, [obj.product_id, obj.size_id], (err, result) => {
         if (err) {
           throw err; // Throw error if there's an issue with the query execution
         }
-  
+
         // If a duplicate item is found, return an error response
         if (result.length > 0) {
           return res.status(400).json({
@@ -355,13 +442,13 @@ module.exports = {
             message: "Product item with the same product_id and size_id already exists!",
           });
         }
-  
+
         // If no duplicate item is found, proceed with the insertion
         const insertQuery = `
           INSERT INTO ITEM 
           SET ?
         `;
-  
+
         db.query(insertQuery, obj, (err, result) => {
           if (err) {
             throw err; // Throw error if there's an issue with the query execution
@@ -378,40 +465,87 @@ module.exports = {
     }
   },
   
-  
+  createSubCategory: async (req, res) => {
+    try {
+      const obj = {
+        category_id: req.body.category_id,
+        sub_name: req.body.sub_name,
+      };
+
+      const checkDuplicateQuery = `
+        SELECT * FROM SUB_CATEGORY 
+        WHERE sub_name = ?
+      `;
+
+      db.query(checkDuplicateQuery, [obj.sub_name], (err, result) => {
+        if (err) {
+          throw err; // Throw error if there's an issue with the query execution
+        }
+
+        // If a duplicate item is found, return an error response
+        if (result.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "Subcategory with the same sub_name already exists!",
+          });
+        }
+
+        // If no duplicate item is found, proceed with the insertion
+        const insertQuery = `
+          INSERT INTO SUB_CATEGORY 
+          SET ?
+        `;
+
+        db.query(insertQuery, obj, (err, result) => {
+          if (err) {
+            throw err; // Throw error if there's an issue with the query execution
+          }
+          res.status(200).json({
+            status: "success",
+            message: "Sub-category created successfully!",
+            data: result,
+          });
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
+
   deleteProductController: async (req, res) => {
     try {
-        const productID = req.params.product_id;
-        const updateSql = "UPDATE PRODUCT SET STATUS = 'Unavailable' WHERE product_id = ?";
-        const updateValues = [productID];
+      const productID = req.params.product_id;
+      const updateSql = "UPDATE PRODUCT SET STATUS = 'Unavailable' WHERE product_id = ?";
+      const updateValues = [productID];
 
-        db.query(updateSql, updateValues, (err, result) => {
-            if (err) {
-                return res.status(500).json({
-                    status: "error",
-                    message: "Internal server error",
-                    error: err.message,
-                });
-            }
-            if (result.affectedRows === 0) {
-                return res.status(404).json({
-                    status: "error",
-                    message: `Product with ID ${productID} not found`,
-                });
-            }
-            res.json({
-                status: "success",
-                message: `Successfully updated status to 'Unavailable' for product with ID ${productID}!`,
-            });
-        });
-    } catch (err) {
-        res.status(400).json({
+      db.query(updateSql, updateValues, (err, result) => {
+        if (err) {
+          return res.status(500).json({
             status: "error",
-            message: "Bad request",
+            message: "Internal server error",
             error: err.message,
+          });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Product with ID ${productID} not found`,
+          });
+        }
+        res.json({
+          status: "success",
+          message: `Successfully updated status to 'Unavailable' for product with ID ${productID}!`,
         });
+      });
+    } catch (err) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: err.message,
+      });
     }
-},
+  },
+
 
   checkQuantityOfProduct: async (req, res) => {
     try {

@@ -10,6 +10,7 @@ const productsController = require("../controller/ProductsController");
 router.get("/get", productsController.getAllProducts);
 
 router.get("/get/category/categoryList", productsController.getByProductCategoryList);
+router.get("/get/category/categoryList/:category_id", productsController.getByProductCategoryId);
 router.get("/get/category/sub_category/:category_id", productsController.getBySubCateByCateId);
 router.get("/get/category/query", productsController.getByProductCategory);
 
@@ -20,7 +21,10 @@ router.get("/get/itemList/:product_id", productsController.getAllItems);
 
 router.put("/update/:product_id", productsController.editProductById);
 router.put("/delete/:product_id", productsController.deleteProductController);
+router.get("/update/category/:category_id", productsController.editCategoryById);
 
+router.post("/category/sub_category/create", productsController.createSubCategory);
+router.post("/item/create", productsController.createProductItem);
 router.post("/item/create", productsController.createProductItem);
 router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
