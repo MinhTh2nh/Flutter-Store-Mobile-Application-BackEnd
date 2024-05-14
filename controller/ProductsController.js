@@ -516,6 +516,52 @@ module.exports = {
       res.status(400).json(error);
     }
   },
+  
+  createSize: async (req, res) => {
+    try {
+      const obj = {
+        size_name: req.body.size_name,
+      };
+
+      const checkDuplicateQuery = `
+        SELECT * FROM SIZE_CATEGORY 
+        WHERE size_name = ?
+      `;
+
+      db.query(checkDuplicateQuery, [obj.size_name], (err, result) => {
+        if (err) {
+          throw err; // Throw error if there's an issue with the query execution
+        }
+
+        // If a duplicate item is found, return an error response
+        if (result.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "Size with the same size_name already exists!",
+          });
+        }
+
+        // If no duplicate item is found, proceed with the insertion
+        const insertQuery = `
+          INSERT INTO SIZE_CATEGORY 
+          SET ?
+        `;
+
+        db.query(insertQuery, obj, (err, result) => {
+          if (err) {
+            throw err; // Throw error if there's an issue with the query execution
+          }
+          res.status(200).json({
+            status: "success",
+            message: "size_name created successfully!",
+            data: result,
+          });
+        });
+      });
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  },
   createCategory: async (req, res) => {
     try {
       const obj = {
