@@ -407,10 +407,11 @@ module.exports = {
     }
   },
 
-  //Update customer detail
   updateCustomerDetail: async (req, res) => {
     try {
-      const { cd_id, phone, address } = req.body;
+      const { phone, address } = req.body;
+      const cd_id = req.params.cd_id; // Access cd_id from params
+
       const updateSql = `UPDATE CUSTOMER_DETAIL SET phone = ?, address = ? WHERE cd_id = ?`;
       db.query(updateSql, [phone, address, cd_id], (err, result) => {
         if (err) {
@@ -420,7 +421,7 @@ module.exports = {
           });
         }
 
-        if (result.afftedRows === 0) {
+        if (result.affectedRows === 0) {
           return res.status(404).json({
             status: "failed",
             error: "Customer detail not found",
