@@ -14,10 +14,10 @@ router.delete(
   //   validateAdmin,
   orderController.deleteOrderById
 );
-router.delete("/deleteAllOrder", validateAdmin, orderController.deleteAllOrder);
+router.delete("/delete", validateAdmin, orderController.deleteAllOrder);
 
 router.get(
-  "/getOrderByUserID/:customer_id",
+  "/get/customer/:customer_id",
   orderController.getOrdersByCustomerId
 );
 

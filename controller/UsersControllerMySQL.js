@@ -9,17 +9,17 @@ module.exports = {
     try {
       const { name, email, password } = req.body;
       const obj = { name, email, password };
-  
+
       // Validation for registration input
       const { errors, isValid } = validateRegisterInput(obj);
-  
+
       if (!isValid) {
         return res.status(errors.status).json(errors);
       }
-  
+
       // Check if the email already exists
       const checkEmailQuery = "SELECT * FROM CUSTOMER WHERE email = ?";
-  
+
       db.query(checkEmailQuery, [email], async (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -27,17 +27,17 @@ module.exports = {
             error: "Internal Server Error",
           });
         }
-  
+
         if (result.length > 0) {
           return res.status(401).json({
             status: "error",
             error: `Email "${email}" already exists!`,
           });
         }
-  
+
         // Hash the user's password before storing it
         const hashedPassword = await bcrypt.hash(password, 10);
-  
+
         // If email doesn't exist, insert the new user
         const insertUserQuery = "INSERT INTO CUSTOMER SET ?";
         db.query(
@@ -47,10 +47,10 @@ module.exports = {
             if (err) {
               return res.status(400).json(err);
             }
-  
+
             // Generate a token for the newly registered user
             const token = generateToken(email); // Replace with your token generation logic
-  
+
             res.json({
               status: "success",
               message: "Successfully created account!",
@@ -68,7 +68,6 @@ module.exports = {
       });
     }
   },
-  
 
   login: async (req, res) => {
     try {
@@ -401,6 +400,75 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error retrieving customer detail:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
+      });
+    }
+  },
+
+  //Update customer detail
+  updateCustomerDetail: async (req, res) => {
+    try {
+      const { cd_id, phone, address } = req.body;
+      const updateSql = `UPDATE CUSTOMER_DETAIL SET phone = ?, address = ? WHERE cd_id = ?`;
+      db.query(updateSql, [phone, address, cd_id], (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "failed",
+            error: "Internal Server Error",
+          });
+        }
+
+        if (result.afftedRows === 0) {
+          return res.status(404).json({
+            status: "failed",
+            error: "Customer detail not found",
+          });
+        }
+
+        res.status(200).json({
+          status: "success",
+          message: "Customer detail updated successfully",
+          data: result,
+        });
+      });
+    } catch (error) {
+      console.error("Error updating customer detail:", error);
+      res.status(500).json({
+        status: "failed",
+        error: "Internal Server Error",
+      });
+    }
+  },
+
+  //delete customer detail
+  deleteCustomerDetail: async (req, res) => {
+    try {
+      const { cd_id } = req.params;
+
+      const deleteSql = `DELETE FROM CUSTOMER_DETAIL WHERE cd_id = ?`;
+      db.query(deleteSql, [cd_id], (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "failed",
+            error: "Internal Server Error",
+          });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({
+            status: "failed",
+            error: "Customer detail not found",
+          });
+        }
+        res.status(200).json({
+          status: "success",
+          message: "Customer detail deleted successfully",
+          data: result,
+        });
+      });
+    } catch (error) {
+      console.error("Error deleting customer detail:", error);
       res.status(500).json({
         status: "failed",
         error: "Internal Server Error",

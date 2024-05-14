@@ -123,7 +123,7 @@ module.exports = {
       });
     } catch {
       res.status(400).json({
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
   },
@@ -135,12 +135,12 @@ module.exports = {
       db.query(sql, value, (error, results) => {
         if (error) {
           return res.status(500).json({
-            error: "Internal Server Error"
+            error: "Internal Server Error",
           });
         }
         if (results.length === 0) {
           return res.status(404).json({
-            error: "Product not found"
+            error: "Product not found",
           });
         }
         const productData = results[0];
@@ -152,7 +152,7 @@ module.exports = {
       });
     } catch {
       res.status(400).json({
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
   },
@@ -168,12 +168,13 @@ module.exports = {
         category_id,
         sub_id,
         total_stock,
-        status
+        status,
       } = req.body;
 
       const updatedStatus = total_stock === 0 ? "Unavailable" : status;
 
-      const updateSql = "UPDATE PRODUCT SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=? WHERE product_id=?";
+      const updateSql =
+        "UPDATE PRODUCT SET product_name=?, product_price=?, product_thumbnail=?, product_description=?, category_id=?, sub_id=?, total_stock=?, STATUS=? WHERE product_id=?";
 
       const updateValues = [
         product_name,
@@ -220,14 +221,11 @@ module.exports = {
   editCategoryById: async (req, res) => {
     try {
       const category_id = req.params.category_id;
-      const {
-        category_name,
-        category_description,
-        category_thumbnail,
-      } = req.body;
+      const { category_name, category_description, category_thumbnail } =
+        req.body;
 
-
-      const updateSql = "UPDATE CATEGORY SET category_name=?, category_description=?, category_thumbnail=? WHERE category_id=?";
+      const updateSql =
+        "UPDATE CATEGORY SET category_name=?, category_description=?, category_thumbnail=? WHERE category_id=?";
 
       const updateValues = [
         category_name,
@@ -298,7 +296,9 @@ module.exports = {
                 INNER JOIN CATEGORY c ON p.category_id = c.category_id
                 INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
             WHERE 
-                1=1 ${category_name ? 'AND c.category_name = ?' : ''} ${sub_name ? 'AND sc.sub_name = ?' : ''} 
+                1=1 ${category_name ? "AND c.category_name = ?" : ""} ${
+        sub_name ? "AND sc.sub_name = ?" : ""
+      } 
         `;
 
       const params = [];
@@ -335,7 +335,7 @@ module.exports = {
           return res.status(500).json({
             status: "error",
             message: "Failed to fetch category",
-            error: err.message // Send error message for debugging
+            error: err.message, // Send error message for debugging
           });
         }
 
@@ -343,7 +343,7 @@ module.exports = {
         if (result.length === 0) {
           return res.status(404).json({
             status: "error",
-            message: "Category not found"
+            message: "Category not found",
           });
         }
 
@@ -351,7 +351,7 @@ module.exports = {
         res.status(200).json({
           status: "success",
           message: "Successfully fetched category",
-          data: result[0] // Assuming category_id is unique, so only one result
+          data: result[0], // Assuming category_id is unique, so only one result
         });
       });
     } catch (error) {
@@ -360,7 +360,7 @@ module.exports = {
       res.status(500).json({
         status: "error",
         message: "Internal server error",
-        error: error.message // Send error message for debugging
+        error: error.message, // Send error message for debugging
       });
     }
   },
@@ -430,41 +430,46 @@ module.exports = {
         WHERE product_id = ? AND size_id = ?
       `;
 
-      db.query(checkDuplicateQuery, [obj.product_id, obj.size_id], (err, result) => {
-        if (err) {
-          throw err; // Throw error if there's an issue with the query execution
-        }
+      db.query(
+        checkDuplicateQuery,
+        [obj.product_id, obj.size_id],
+        (err, result) => {
+          if (err) {
+            throw err; // Throw error if there's an issue with the query execution
+          }
 
-        // If a duplicate item is found, return an error response
-        if (result.length > 0) {
-          return res.status(400).json({
-            status: "error",
-            message: "Product item with the same product_id and size_id already exists!",
-          });
-        }
+          // If a duplicate item is found, return an error response
+          if (result.length > 0) {
+            return res.status(400).json({
+              status: "error",
+              message:
+                "Product item with the same product_id and size_id already exists!",
+            });
+          }
 
-        // If no duplicate item is found, proceed with the insertion
-        const insertQuery = `
+          // If no duplicate item is found, proceed with the insertion
+          const insertQuery = `
           INSERT INTO ITEM 
           SET ?
         `;
 
-        db.query(insertQuery, obj, (err, result) => {
-          if (err) {
-            throw err; // Throw error if there's an issue with the query execution
-          }
-          res.status(200).json({
-            status: "success",
-            message: "Item created successfully!",
-            data: result,
+          db.query(insertQuery, obj, (err, result) => {
+            if (err) {
+              throw err; // Throw error if there's an issue with the query execution
+            }
+            res.status(200).json({
+              status: "success",
+              message: "Item created successfully!",
+              data: result,
+            });
           });
-        });
-      });
+        }
+      );
     } catch (error) {
       res.status(400).json(error);
     }
   },
-  
+
   createSubCategory: async (req, res) => {
     try {
       const obj = {
@@ -560,7 +565,8 @@ module.exports = {
   deleteProductController: async (req, res) => {
     try {
       const productID = req.params.product_id;
-      const updateSql = "UPDATE PRODUCT SET STATUS = 'Unavailable' WHERE product_id = ?";
+      const updateSql =
+        "UPDATE PRODUCT SET STATUS = 'Unavailable' WHERE product_id = ?";
       const updateValues = [productID];
 
       db.query(updateSql, updateValues, (err, result) => {
@@ -590,7 +596,6 @@ module.exports = {
       });
     }
   },
-
 
   checkQuantityOfProduct: async (req, res) => {
     try {
@@ -635,4 +640,90 @@ module.exports = {
       });
     }
   },
+
+  //Add new review
+  addReview: async (req, res) => {
+    try {
+      const { review_rating, review_comment, item_id, customer_id } = req.body;
+
+      if (!review_rating || !item_id || !customer_id) {
+        return res.status(400).json({
+          status: "error",
+          message: "Please provide all required fields",
+        });
+      }
+
+      const insertSql = `INSERT INTO REVIEW (review_rating, review_comment, item_id, customer_id) VALUES (?, ?, ?, ?)`;
+      db.query(
+        insertSql,
+        [review_rating, review_comment, item_id, customer_id],
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              status: "error",
+              message: "Internal server error",
+              error: err.message,
+            });
+          }
+
+          res.status(200).json({
+            status: "success",
+            message: "Review added successfully",
+            data: {
+              // review_id: result.insertId,
+              review_rating,
+              review_comment,
+              item_id,
+              customer_id,
+              review_timestamp: new Date(),
+            },
+          });
+        }
+      );
+    } catch (error) {
+      console.error("Error adding review:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+
+  // Get all reviews
+  getAllReviewByProductId: async (req, res) => {
+    try {
+      const {product_id} = req.params;
+
+      const query = `
+        SELECT
+        R.*
+        FROM
+          REVIEW R INNER JOIN ITEM I ON R.item_id = I.item_id
+          WHERE I.product_id = ?
+      `
+      db.query(query,[product_id], (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: err.message,
+          });
+        }
+
+        res.status(200).json({
+          status: "success",
+          message: "Successfully fetched reviews",
+          data: result,
+        });
+      });
+    } catch (error){
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  }
 };

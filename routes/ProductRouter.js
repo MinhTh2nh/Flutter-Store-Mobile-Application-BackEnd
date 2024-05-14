@@ -29,9 +29,9 @@ router.post("/category/create", productsController.createCategory);
 router.post("/create", productsController.createProduct);
 router.post('/checkQuantity', productsController.checkQuantityOfProduct);
 
-//Un-Test
-//For the MySQL database -- End Here
-// router.get("/getProductUnavailable", productsController.getProductUnavailable);
-// router.get("/getAllProducts", productsController.getAllProducts);
+
+//ROUTE FOR REVIEW PRODUCT
+router.post("/review/create", productsController.addReview);
+router.get("/:product_id/reviews", productsController.getAllReviewByProductId);
 
 module.exports = router;
