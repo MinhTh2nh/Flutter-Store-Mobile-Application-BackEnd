@@ -49,7 +49,7 @@ module.exports = {
                 p.*,
                 c.*,
                 sc.sub_name,
-                AVG(r.review_rating) AS average_rating
+                COALESCE(CAST(AVG(r.review_rating) AS DECIMAL(10, 1)), 0.0) AS average_rating
             FROM 
                 PRODUCT p
                 INNER JOIN CATEGORY c ON p.category_id = c.category_id
@@ -68,6 +68,14 @@ module.exports = {
             error: err.message,
           });
         }
+
+        // Convert average_rating to a double and handle null values
+        result.forEach((product) => {
+          product.average_rating =
+            product.average_rating != null
+              ? parseFloat(product.average_rating)
+              : 0.0;
+        });
 
         res.status(200).json({
           status: "success",
