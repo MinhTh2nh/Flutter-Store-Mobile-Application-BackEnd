@@ -45,19 +45,26 @@ module.exports = {
   getAllProducts: async (req, res) => {
     try {
       let sql = `
-            SELECT 
-                p.*,
-                c.*,
-                sc.sub_name,
-                COALESCE(CAST(AVG(r.review_rating) AS DECIMAL(10, 1)), 0.0) AS average_rating
-            FROM 
-                PRODUCT p
-                INNER JOIN CATEGORY c ON p.category_id = c.category_id
-                INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
-                LEFT JOIN ITEM i ON p.product_id = i.product_id
-                LEFT JOIN REVIEW r ON i.item_id = r.item_id
-            GROUP BY 
-                p.product_id
+      SELECT 
+          p.*,
+          c.*,
+          sc.sub_name,
+          COALESCE(CAST(AVG(
+              CASE 
+                  WHEN r.review_rating IS NULL THEN NULL
+                  WHEN r.review_rating < 0 THEN 0
+                  WHEN r.review_rating > 5 THEN 5
+                  ELSE FLOOR(r.review_rating * 2 + 0.5) / 2 
+              END
+          ) AS DECIMAL(10, 1)), 0.0) AS average_rating
+      FROM 
+          PRODUCT p
+          INNER JOIN CATEGORY c ON p.category_id = c.category_id
+          INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+          LEFT JOIN ITEM i ON p.product_id = i.product_id
+          LEFT JOIN REVIEW r ON i.item_id = r.item_id
+      GROUP BY 
+          p.product_id;
         `;
 
       db.query(sql, (err, result) => {
