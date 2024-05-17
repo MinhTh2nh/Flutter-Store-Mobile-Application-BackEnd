@@ -442,7 +442,8 @@ module.exports = {
         sc.sub_name,
         s.size_id,
         s.size_name,
-        i.stock
+        i.stock,
+        i.item_id
       FROM 
         ORDERS o
       JOIN 
@@ -501,6 +502,7 @@ module.exports = {
 
           acc[order_id].order_details.push({
             detail_id: order.detail_id,
+            item_id: order.item_id,
             quantity: order.quantity,
             product: {
               product_id: order.product_id,

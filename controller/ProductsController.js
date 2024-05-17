@@ -48,11 +48,16 @@ module.exports = {
             SELECT 
                 p.*,
                 c.*,
-                sc.sub_name
+                sc.sub_name,
+                COALESCE(CAST(AVG(r.review_rating) AS DECIMAL(10, 1)), 0.0) AS average_rating
             FROM 
                 PRODUCT p
                 INNER JOIN CATEGORY c ON p.category_id = c.category_id
                 INNER JOIN SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+                LEFT JOIN ITEM i ON p.product_id = i.product_id
+                LEFT JOIN REVIEW r ON i.item_id = r.item_id
+            GROUP BY 
+                p.product_id
         `;
 
       db.query(sql, (err, result) => {
@@ -63,6 +68,14 @@ module.exports = {
             error: err.message,
           });
         }
+
+        // Convert average_rating to a double and handle null values
+        result.forEach((product) => {
+          product.average_rating =
+            product.average_rating != null
+              ? parseFloat(product.average_rating)
+              : 0.0;
+        });
 
         res.status(200).json({
           status: "success",
@@ -736,19 +749,23 @@ module.exports = {
     }
   },
 
-  // Get all reviews
   getAllReviewByProductId: async (req, res) => {
     try {
-      const {product_id} = req.params;
+      const { product_id } = req.params;
 
       const query = `
-        SELECT
-        R.*
-        FROM
-          REVIEW R INNER JOIN ITEM I ON R.item_id = I.item_id
-          WHERE I.product_id = ?
-      `
-      db.query(query,[product_id], (err, result) => {
+            SELECT
+                R.*,
+                C.name
+            FROM
+                REVIEW R
+                INNER JOIN ITEM I ON R.item_id = I.item_id
+                INNER JOIN CUSTOMER C ON R.customer_id = C.customer_id
+            WHERE
+                I.product_id = ?
+        `;
+
+      db.query(query, [product_id], (err, result) => {
         if (err) {
           return res.status(500).json({
             status: "error",
@@ -763,7 +780,7 @@ module.exports = {
           data: result,
         });
       });
-    } catch (error){
+    } catch (error) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({
         status: "error",
@@ -771,5 +788,5 @@ module.exports = {
         error: error.message,
       });
     }
-  }
+  },
 };
