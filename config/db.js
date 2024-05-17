@@ -1,40 +1,34 @@
 require("dotenv").config();
 const mysql = require("mysql");
 
-const db = mysql.createConnection({
-  host: process.env.INSTANCE_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT, 
-});
+let db;
 
-// const createTablesQueries = [
-//   `CREATE TABLE CUSTOMER (
-//       customer_id INT PRIMARY KEY AUTO_INCREMENT,
-//       name VARCHAR(100),
-//       email VARCHAR(100),
-//       password VARCHAR(100)
-//   )`,
-//   `CREATE TABLE CUSTOMER_DETAIL (
-//       customer_id INT,
-//       phone VARCHAR(20),
-//       address VARCHAR(255),
-//       FOREIGN KEY (customer_id) REFERENCES CUSTOMER(customer_id)
-//   )`,
-// ];
+function createPool() {
+  console.error("CREATING POOL");
+  db = mysql.createPool({
+    host: process.env.INSTANCE_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    connectionLimit: 50,
+    queueLimit: 0,
+    waitForConnections: true,
+    // port: process.env.DB_PORT,
+  });
 
-// function createTables() {
-//   createTablesQueries.forEach(query => {
-//     db.query(query, (err, results) => {
-//           if (err) {
-//               console.error('Error creating table:', err);
-//               return;
-//           }
-//           console.log('Table created successfully');
-//       });
-//   });
-// }
+  db.on("connection", (connection) => {
+    console.error("NEW CONNECTION");
+  });
 
-// createTables() ;
-module.exports = db; // Export the promise-based pool
+  db.on("error", (err) => {
+    console.error("POOL ERROR", err.code);
+    if (err.fatal) {
+      console.error("FATAL ERROR OCCURRED, RESTARTING POOL");
+      createPool();
+    }
+  });
+}
+
+createPool();
+
+module.exports = db;
