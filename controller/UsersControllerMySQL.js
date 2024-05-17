@@ -4,6 +4,13 @@ const validateRegisterInput = require("../validator/RegisterValidator");
 const db = require("../config/db");
 require("dotenv").config();
 
+const generateToken = (email) => {
+  const payload = { email };
+  const options = { expiresIn: '1h' }; // Set token expiry as needed
+  const secret = process.env.JWT_SECRET_KEY; // Ensure you have a JWT_SECRET defined in your .env file
+  return jwt.sign(payload, secret, options);
+};
+
 module.exports = {
   register: async (req, res) => {
     try {
