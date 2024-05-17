@@ -21,7 +21,9 @@ router.get("/get/itemList/:product_id", productsController.getAllItems);
 
 router.put("/update/:product_id", productsController.editProductById);
 router.put("/delete/:product_id", productsController.deleteProductController);
-router.get("/update/category/:category_id", productsController.editCategoryById);
+router.put("/update/category/:category_id", productsController.editCategoryById);
+router.put("/update/sub_category/:sub_id", productsController.editSubCategoryById);
+router.put("/update/product/item/:item_id", productsController.editProductItemById);
 
 router.post("/category/sub_category/create", productsController.createSubCategory);
 router.post("/get/size/create", productsController.createSize);

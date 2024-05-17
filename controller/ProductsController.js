@@ -264,6 +264,95 @@ module.exports = {
     }
   },
 
+  editSubCategoryById: async (req, res) => {
+    try {
+      const sub_id = req.params.sub_id;
+      const { sub_name, category_id } =
+        req.body;
+
+      const updateSql =
+        "UPDATE SUB_CATEGORY SET sub_name=?, category_id=? WHERE sub_id=?";
+
+      const updateValues = [
+        sub_name,
+        category_id,
+        sub_id,
+      ];
+
+      db.query(updateSql, updateValues, (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: updateErr.message,
+          });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Sub Category with ID ${sub_id} not found`,
+          });
+        }
+
+        res.json({
+          status: "success",
+          message: `Successfully updated Sub Category with ID ${sub_id}!`,
+        });
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: error.message,
+      });
+    }
+  },
+  editProductItemById: async (req, res) => {
+    try {
+      const item_id = req.params.item_id;
+      const { product_id, size_id , stock} =
+        req.body;
+
+      const updateSql =
+        "UPDATE ITEM SET product_id=?, size_id=? , stock=? WHERE item_id=?";
+
+      const updateValues = [
+        product_id,
+        size_id,
+        stock,
+        item_id,
+      ];
+
+      db.query(updateSql, updateValues, (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: updateErr.message,
+          });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({
+            status: "error",
+            message: `Item with ID ${item_id} not found`,
+          });
+        }
+
+        res.json({
+          status: "success",
+          message: `Item updated with ID ${item_id}!`,
+        });
+      });
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: "Bad request",
+        error: error.message,
+      });
+    }
+  },
   getAllProductAvailable: async (req, res) => {
     try {
       const status = "Available";
