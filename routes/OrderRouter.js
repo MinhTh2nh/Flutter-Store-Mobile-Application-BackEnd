@@ -6,6 +6,7 @@ const { validateAdmin, validateUser } = require("../validator/UsersValidator");
 //For the MongoDB database -- Start Here
 router.post("/create", orderController.createOrder);
 router.put("/update/:order_id", orderController.updateOrderById);
+router.put("/update/:order_id/status", orderController.updateOrderStatus);
 router.get("/get/:order_id", orderController.showOrderDetails);
 router.get("/get", orderController.getAllOrders);
 
