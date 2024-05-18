@@ -393,6 +393,47 @@ module.exports = {
     }
   },
 
+  updateOrderStatus: async (req,res)=> {
+    try {
+      const {order_id} = req.params;
+      const {order_status} = req.body;
+
+      const updateOrderStatusSql = `
+      UPDATE ORDERS
+      SET order_status = ?
+      WHERE order_id = ?;
+      `;
+
+      db.query(updateOrderStatusSql,
+        [order_status, order_id],
+        (err, result)=>{
+          if(err){
+            console.error("Error updating order status:", err);
+            return res.status(500).json({
+              status: "failed",
+              error: "Internal Server Error",
+            });
+          }
+
+          if(result.affectedRows === 0){
+            return res.status(404).json({
+              status: "failed",
+              error: "Order not found",
+            });
+          }
+
+          res.status(200).json({
+            status: "success",
+            message: "Order status updated successfully",
+          });
+        }
+      )
+    } catch (error){
+      console.error("Error updating order status:", error);
+      res.status(400).json({status: "failed", error: "Bad request"});
+    }
+  },
+
   deleteOrderById: async (req, res) => {
     const { order_id } = req.params;
 
