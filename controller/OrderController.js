@@ -10,9 +10,9 @@ module.exports = {
         order_address,
         shipping_address,
         phoneNumber,
+        payment_type,
         total_price,
         items,
-        payment_type
       } = req.body;
 
       let payment_status;
@@ -32,7 +32,7 @@ module.exports = {
       // Set the order status to "pending"
       const order_status = "pending";
 
-   const insertOrderSql = `
+      const insertOrderSql = `
       INSERT INTO ORDERS 
         (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id, payment_type, payment_status) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -415,10 +415,10 @@ module.exports = {
     }
   },
 
-  updateOrderStatus: async (req,res)=> {
+  updateOrderStatus: async (req, res) => {
     try {
-      const {order_id} = req.params;
-      const {order_status} = req.body;
+      const { order_id } = req.params;
+      const { order_status } = req.body;
 
       const updateOrderStatusSql = `
       UPDATE ORDERS
@@ -426,10 +426,11 @@ module.exports = {
       WHERE order_id = ?;
       `;
 
-      db.query(updateOrderStatusSql,
+      db.query(
+        updateOrderStatusSql,
         [order_status, order_id],
-        (err, result)=>{
-          if(err){
+        (err, result) => {
+          if (err) {
             console.error("Error updating order status:", err);
             return res.status(500).json({
               status: "failed",
@@ -437,7 +438,7 @@ module.exports = {
             });
           }
 
-          if(result.affectedRows === 0){
+          if (result.affectedRows === 0) {
             return res.status(404).json({
               status: "failed",
               error: "Order not found",
@@ -449,10 +450,10 @@ module.exports = {
             message: "Order status updated successfully",
           });
         }
-      )
-    } catch (error){
+      );
+    } catch (error) {
       console.error("Error updating order status:", error);
-      res.status(400).json({status: "failed", error: "Bad request"});
+      res.status(400).json({ status: "failed", error: "Bad request" });
     }
   },
 
