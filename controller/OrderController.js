@@ -26,13 +26,16 @@ module.exports = {
       } else {
         return res
           .status(400)
-          .json({ status: "failed", error: "Invalid payment type" });
+          .json({
+            status: "failed",
+            error: "Invalid payment type"
+          });
       }
 
       // Set the order status to "pending"
       const order_status = "pending";
 
-   const insertOrderSql = `
+      const insertOrderSql = `
       INSERT INTO ORDERS 
         (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id, payment_type, payment_status) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -56,7 +59,10 @@ module.exports = {
             console.error("Error inserting order:", err);
             return res
               .status(500)
-              .json({ status: "failed", error: "Internal Server Error" });
+              .json({
+                status: "failed",
+                error: "Internal Server Error"
+              });
           }
 
           const orderID = result.insertId;
@@ -78,7 +84,10 @@ module.exports = {
                 console.error("Error inserting order details:", err);
                 return res
                   .status(500)
-                  .json({ status: "failed", error: "Internal Server Error" });
+                  .json({
+                    status: "failed",
+                    error: "Internal Server Error"
+                  });
               }
 
               res.status(200).json({
@@ -92,7 +101,10 @@ module.exports = {
       );
     } catch (error) {
       console.error("Error in createOrder:", error);
-      res.status(400).json({ status: "failed", error: "Bad request" });
+      res.status(400).json({
+        status: "failed",
+        error: "Bad request"
+      });
     }
   },
 
@@ -100,42 +112,46 @@ module.exports = {
     try {
       // Query all orders
       const sql = `
-      SELECT 
-        o.order_id,
-        o.order_date,
-        o.order_status,
-        o.total_price,
-        o.payment_status,
-        o.payment_type,
-        od.detail_id,
-        od.quantity,
-        p.product_id,
-        p.product_name,
-        p.product_price,
-        p.product_thumbnail,
-        p.product_description,
-        c.category_id,
-        c.category_name,
-        sc.sub_id,
-        sc.sub_name,
-        s.size_id,
-        s.size_name,
-        i.stock
-      FROM 
-        ORDERS o
-      JOIN 
-        ORDER_DETAIL od ON o.order_id = od.order_id
-      JOIN 
-        ITEM i ON od.item_id = i.item_id
-      JOIN 
-        PRODUCT p ON i.product_id = p.product_id
-      JOIN 
-        CATEGORY c ON p.category_id = c.category_id
-      JOIN 
-        SUB_CATEGORY sc ON p.sub_id = sc.sub_id
-      JOIN 
-        SIZE_CATEGORY s ON i.size_id = s.size_id;
-    `;
+        SELECT 
+            o.order_id,
+            o.order_date,
+            o.order_quantity,
+            o.shipping_address,
+            o.phoneNumber,
+            o.order_status,
+            o.total_price,
+            o.payment_status,
+            o.payment_type,
+
+            od.detail_id,
+            od.quantity,
+            p.product_id,
+            p.product_name,
+            p.product_price,
+            p.product_thumbnail,
+            p.product_description,
+            c.category_id,
+            c.category_name,
+            sc.sub_id,
+            sc.sub_name,
+            s.size_id,
+            s.size_name,
+            i.stock
+        FROM 
+            ORDERS o
+        JOIN 
+            ORDER_DETAIL od ON o.order_id = od.order_id
+        JOIN 
+            ITEM i ON od.item_id = i.item_id
+        JOIN 
+            PRODUCT p ON i.product_id = p.product_id
+        JOIN 
+            CATEGORY c ON p.category_id = c.category_id
+        JOIN 
+            SUB_CATEGORY sc ON p.sub_id = sc.sub_id
+        JOIN 
+            SIZE_CATEGORY s ON i.size_id = s.size_id;
+        `;
 
       db.query(sql, (err, result) => {
         if (err) {
@@ -152,7 +168,12 @@ module.exports = {
             order_id,
             order_date,
             order_status,
+
+            shipping_address,
+            phoneNumber,
             total_price,
+            order_quantity,
+
             payment_status,
             payment_type,
             ...details
@@ -163,7 +184,12 @@ module.exports = {
               order_id,
               order_date,
               order_status,
+
+              shipping_address,
+              phoneNumber,
               total_price,
+              order_quantity,
+
               payment_status,
               payment_type,
               order_details: [],
@@ -214,20 +240,18 @@ module.exports = {
     }
   },
 
+
   showOrderDetails: async (req, res) => {
     try {
-      const { order_id } = req.params;
+      const {
+        order_id
+      } = req.params;
       console.log("order_id", order_id);
 
       // Query order details
       const sql = `
       SELECT 
-          o.order_id,
-          o.order_date,
-          o.order_status,
-          o.total_price,
-          o.payment_status,
-          o.payment_type,
+          o.*,
           od.detail_id,
           od.detail_price,
           od.item_id,
@@ -328,7 +352,9 @@ module.exports = {
 
   updateOrderById: async (req, res) => {
     try {
-      const { order_id } = req.params;
+      const {
+        order_id
+      } = req.params;
       const {
         order_quantity,
         order_address,
@@ -424,14 +450,21 @@ module.exports = {
       );
     } catch (error) {
       console.error("Error updating order:", error);
-      res.status(400).json({ status: "failed", error: "Bad request" });
+      res.status(400).json({
+        status: "failed",
+        error: "Bad request"
+      });
     }
   },
 
-  updateOrderStatus: async (req,res)=> {
+  updateOrderStatus: async (req, res) => {
     try {
-      const {order_id} = req.params;
-      const {order_status} = req.body;
+      const {
+        order_id
+      } = req.params;
+      const {
+        order_status
+      } = req.body;
 
       const updateOrderStatusSql = `
       UPDATE ORDERS
@@ -441,8 +474,8 @@ module.exports = {
 
       db.query(updateOrderStatusSql,
         [order_status, order_id],
-        (err, result)=>{
-          if(err){
+        (err, result) => {
+          if (err) {
             console.error("Error updating order status:", err);
             return res.status(500).json({
               status: "failed",
@@ -450,7 +483,7 @@ module.exports = {
             });
           }
 
-          if(result.affectedRows === 0){
+          if (result.affectedRows === 0) {
             return res.status(404).json({
               status: "failed",
               error: "Order not found",
@@ -463,14 +496,19 @@ module.exports = {
           });
         }
       )
-    } catch (error){
+    } catch (error) {
       console.error("Error updating order status:", error);
-      res.status(400).json({status: "failed", error: "Bad request"});
+      res.status(400).json({
+        status: "failed",
+        error: "Bad request"
+      });
     }
   },
 
   deleteOrderById: async (req, res) => {
-    const { order_id } = req.params;
+    const {
+      order_id
+    } = req.params;
 
     try {
       // Delete order from the ORDERS table
@@ -496,7 +534,9 @@ module.exports = {
 
   getOrdersByCustomerId: async (req, res) => {
     try {
-      const { customer_id } = req.params;
+      const {
+        customer_id
+      } = req.params;
 
       // Query orders by customer_id
       const sql = `
@@ -636,7 +676,9 @@ module.exports = {
         });
       });
     } catch (err) {
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({
+        error: "Internal Server Error"
+      });
     }
   },
 };
