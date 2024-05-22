@@ -332,6 +332,7 @@ module.exports = {
             order_id: result[0].order_id,
             order_quantity: result[0].order_quantity,
             payment_type: result[0].payment_type,
+            order_address: result[0].order_address,
             shipping_address: result[0].shipping_address,
             phoneNumber: result[0].phoneNumber,
             order_date: result[0].order_date,
