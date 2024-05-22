@@ -105,6 +105,8 @@ module.exports = {
         o.order_date,
         o.order_status,
         o.total_price,
+        o.payment_status,
+        o.payment_type,
         od.detail_id,
         od.quantity,
         p.product_id,
@@ -151,6 +153,8 @@ module.exports = {
             order_date,
             order_status,
             total_price,
+            payment_status,
+            payment_type,
             ...details
           } = order;
 
@@ -160,6 +164,8 @@ module.exports = {
               order_date,
               order_status,
               total_price,
+              payment_status,
+              payment_type,
               order_details: [],
             };
           }
@@ -216,7 +222,12 @@ module.exports = {
       // Query order details
       const sql = `
       SELECT 
-          o.*,
+          o.order_id,
+          o.order_date,
+          o.order_status,
+          o.total_price,
+          o.payment_status,
+          o.payment_type,
           od.detail_id,
           od.detail_price,
           od.item_id,
@@ -293,8 +304,10 @@ module.exports = {
           status: "success",
           data: {
             order_id: result[0].order_id,
+            payment_status: result[0].payment_status,
+            order_id: result[0].order_id,
             order_quantity: result[0].order_quantity,
-            order_address: result[0].order_address,
+            payment_type: result[0].payment_type,
             shipping_address: result[0].shipping_address,
             phoneNumber: result[0].phoneNumber,
             order_date: result[0].order_date,
