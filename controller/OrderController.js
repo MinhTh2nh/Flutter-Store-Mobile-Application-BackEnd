@@ -10,27 +10,12 @@ module.exports = {
         order_address,
         shipping_address,
         phoneNumber,
-        payment_type,
         total_price,
         items,
+        payment_type,
+        payment_status,
       } = req.body;
 
-      let payment_status;
-      if (payment_type === "When receive order") {
-        payment_status = "incompleted";
-      } else if (
-        payment_type === "smart banking" ||
-        payment_type === "online banking"
-      ) {
-        payment_status = "completed";
-      } else {
-        return res
-          .status(400)
-          .json({
-            status: "failed",
-            error: "Invalid payment type"
-          });
-      }
 
       // Set the order status to "pending"
       const order_status = "pending";
@@ -460,18 +445,22 @@ module.exports = {
 
   updateOrderStatus: async (req, res) => {
     try {
-      const { order_id } = req.params;
-      const { order_status } = req.body;
+      const {
+        order_id
+      } = req.params;
+      const {
+        order_status,
+        payment_status
+      } = req.body;
 
       const updateOrderStatusSql = `
       UPDATE ORDERS
-      SET order_status = ?
+      SET order_status = ? , payment_status = ?
       WHERE order_id = ?;
       `;
 
-      db.query(
-        updateOrderStatusSql,
-        [order_status, order_id],
+      db.query(updateOrderStatusSql,
+        [order_status,payment_status,order_id],
         (err, result) => {
           if (err) {
             console.error("Error updating order status:", err);
