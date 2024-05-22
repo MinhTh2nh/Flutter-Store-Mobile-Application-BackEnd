@@ -10,9 +10,9 @@ module.exports = {
         order_address,
         shipping_address,
         phoneNumber,
+        payment_type,
         total_price,
         items,
-        payment_type
       } = req.body;
 
       let payment_status;
@@ -460,12 +460,8 @@ module.exports = {
 
   updateOrderStatus: async (req, res) => {
     try {
-      const {
-        order_id
-      } = req.params;
-      const {
-        order_status
-      } = req.body;
+      const { order_id } = req.params;
+      const { order_status } = req.body;
 
       const updateOrderStatusSql = `
       UPDATE ORDERS
@@ -473,7 +469,8 @@ module.exports = {
       WHERE order_id = ?;
       `;
 
-      db.query(updateOrderStatusSql,
+      db.query(
+        updateOrderStatusSql,
         [order_status, order_id],
         (err, result) => {
           if (err) {
