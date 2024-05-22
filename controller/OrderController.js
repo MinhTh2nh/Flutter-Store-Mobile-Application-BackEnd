@@ -541,10 +541,7 @@ module.exports = {
       // Query orders by customer_id
       const sql = `
       SELECT 
-        o.order_id,
-        o.order_date,
-        o.order_status,
-        o.total_price,
+        o.*,
         od.detail_id,
         od.quantity,
         p.product_id,
@@ -603,6 +600,11 @@ module.exports = {
             order_date,
             order_status,
             total_price,
+            order_address,
+            shipping_address,
+            phoneNumber,
+            payment_type,
+            payment_status,
             ...details
           } = order;
 
@@ -612,6 +614,11 @@ module.exports = {
               order_date,
               order_status,
               total_price,
+              order_address,
+              shipping_address,
+              phoneNumber,
+              payment_type,
+              payment_status,
               order_details: [],
             };
           }
