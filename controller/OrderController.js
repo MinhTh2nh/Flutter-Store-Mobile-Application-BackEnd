@@ -12,16 +12,30 @@ module.exports = {
         phoneNumber,
         total_price,
         items,
+        payment_type
       } = req.body;
+
+      let payment_status;
+      if (payment_type === "When receive order") {
+        payment_status = "incompleted";
+      } else if (
+        payment_type === "smart banking" ||
+        payment_type === "online banking"
+      ) {
+        payment_status = "completed";
+      } else {
+        return res
+          .status(400)
+          .json({ status: "failed", error: "Invalid payment type" });
+      }
 
       // Set the order status to "pending"
       const order_status = "pending";
 
-      // Insert order into ORDERS table
-      const insertOrderSql = `
+   const insertOrderSql = `
       INSERT INTO ORDERS 
-        (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+        (order_quantity, order_address, shipping_address, phoneNumber, order_status, total_price, customer_id, payment_type, payment_status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
       db.query(
@@ -34,6 +48,8 @@ module.exports = {
           order_status, // Set order status to "pending"
           total_price,
           customer_id,
+          payment_type,
+          payment_status,
         ],
         (err, result) => {
           if (err) {
@@ -307,6 +323,8 @@ module.exports = {
         phoneNumber,
         order_status,
         total_price,
+        payment_type,
+        payment_status,
         items,
       } = req.body;
 
@@ -319,7 +337,9 @@ module.exports = {
         shipping_address = ?,
         phoneNumber = ?,
         order_status = ?,
-        total_price = ?
+        total_price = ?,
+        payment_type = ?,
+        payment_status = ?
       WHERE
         order_id = ?;
     `;
@@ -333,6 +353,8 @@ module.exports = {
           phoneNumber,
           order_status,
           total_price,
+          payment_type,
+          payment_status,
           order_id,
         ],
         (err, result) => {
