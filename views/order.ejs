@@ -1,0 +1,48 @@
+<!-- // Created by CTT VNPAY -->
+
+<!-- // Mobile Version - Large Fonts and Buttons -->
+
+<%- include('layout') %>
+
+<%- block('content') %>
+    <h3 class="title" style="font-size: 28px; text-align: center; margin-bottom: 40px;"><%= title %></h3>
+
+    <form id="createOrder" action="create_payment_url" method="POST">
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label for="amount" style="font-size: 22px;">Số tiền</label>
+            <input type="text" class="form-control" id="amount" name="amount" placeholder="Số tiền" value="<%= amount %>" style="font-size: 22px; padding: 15px; width: 100%;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label for="bankCode" style="font-size: 22px;">Chọn Phương thức thanh toán:</label>
+            <div class="controls">
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="bankCode" id="defaultPaymentMethod" value="" checked style="margin-right: 10px;">Cổng thanh toán VNPAYQR
+                </label>
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="bankCode" id="vnpayqrPaymentMethod" value="VNPAYQR" style="margin-right: 10px;">Thanh toán qua ứng dụng hỗ trợ VNPAYQR
+                </label>
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="bankCode" id="vnbankPaymentMethod" value="VNBANK" style="margin-right: 10px;">Thanh toán qua ATM-Tài khoản ngân hàng nội địa
+                </label>
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="bankCode" id="intcardPaymentMethod" value="INTCARD" style="margin-right: 10px;">Thanh toán qua thẻ quốc tế
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label for="language" style="font-size: 22px;">Ngôn ngữ</label>
+            <div class="controls">
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="language" id="vnLanguage" value="vn" checked style="margin-right: 10px;">Tiếng việt
+                </label>
+                <label class="radio-inline" style="font-size: 22px; display: block; margin-top: 15px;">
+                    <input type="radio" name="language" id="enLanguage" value="en" style="margin-right: 10px;">Tiếng anh
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-default" id="btnPopup" style="font-size: 24px; padding: 15px; width: 100%;">Thanh toán</button>
+    </form>
+<%- endblock %>
